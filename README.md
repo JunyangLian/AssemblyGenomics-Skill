@@ -1,33 +1,60 @@
 # AssemblyGenomics Skill
 
-**帮助新手搭建第一套属于自己的基因组组装/注释流水线**——把测序数据与交付目标，变成一条可执行、带坑位预警、人类审核不可绕过、且每步都过基线校验的路线；项目走完，交付一套**属于你自己的可复用 SOP 毕业包**（D-020）。
+基因组组装与注释的 **SOP 教练**。把测序数据和交付目标交给它，它告诉你：手里有哪些数据、该走哪条路线、每一步怎么做、这一步有什么坑——并生成能直接在服务器上跑的分步 SOP 包。已在酵母全流程端到端实证（结构注释 5,384 基因 / BUSCO 99.0%，功能注释 Any-Annotated 99.96%）。
 
 ## 为什么存在
 
-组装/注释流水线的经典失败模式不是“报错”，而是**能跑通但不完整**（silent gap）：库版本过旧、步骤产物断裂、参数被默认值吞掉、注释只覆盖 4% 的基因——全程零报错。本项目把“专家踩坑经验”代码化，并用**文献基线锚点**回答新手最缺的问题：“我这个数正常吗？”
+组装/注释流水线最阴险的失败不是"报错"，而是**能跑通但不完整**（silent gap）：库版本过旧、参数被默认值吞掉、注释只覆盖了 4% 的基因——全程零报错，直到交付才发现。本 skill 把专家踩坑经验代码化，并用**文献基线锚点**回答新手最缺的问题："我这个数正常吗？"
 
-- **陷阱库**：9 条真实种子（PIT-001~009），全部来自真实项目事故（Dfam 旧库、TSEBRA 阈值、FASTA 头 vs BAM 参考名、单外显子过滤的物种依赖……），带可执行检查脚本
-- **基线双层**：intake 时选定同种/同属已发表注释作锚点（D-016），范围外报 GAP 并区分合法偏离（多倍化等）与流程问题（指向对应 PIT）
-- **审核门控**：人类批准二要素、hash 绑定、编辑引用校验——LLM 无法代写“已审核”
-- **状态机与失效传播**：磁盘结构化记录为准，不实重试、不伪造完成标记
-- **毕业包**：流程跑通后沉淀为可复用的四段 SOP（settings 冻结 + 检查点 + 基线），换物种按 intake 流程复用
+## 它能帮你做什么
 
-## 真实验证（酵母机制环，use-case-003）
+- **认数据**：随手丢一份文件清单，自动识别 WGS 短读 / Hi-C / RNA-seq / 已有组装，检查成对性，并推断交付目标（如从 hap1/hap2 文件名识别出"单倍型交付"）
+- **定路线**：根据数据与目标推荐流程——从原始读段组装、已有组装接续 Hi-C 挂载，到结构注释与功能注释
+- **出 SOP**：生成可逐段执行的 SOP 包：每步含命令、资源预算、必须人工介入的检查点（如 Hi-C 的 Juicebox 校正）
+- **预警坑**：每一步挂载真实踩坑库——9 条真实事故种子（Dfam 旧库、TSEBRA 阈值、单外显子过滤的物种依赖……），带可执行检查脚本，专抓"能跑通但不完整"
+- **验结果**：阶段成果回传后自动校验——静默缺口检查 + 基线对照，通过就发下一段 SOP，不通过就给修复脚本
+- **可复用**：全流程跑通后沉淀**毕业包**（冻结 settings + 检查点 + 基线锚点），换物种按同一套流程复用
 
-2026-09-23~24，S. cerevisiae S288C（R64 参考组装）四段全链路经 skill 生成的 SOP 在真实服务器跑通并逐段回传校验：
+## 工作流程
 
-| 段 | 内容 | 关键结果 |
-|---|---|---|
-| 1 重复注释 | RepeatModeler2 → RepeatMasker | 软屏蔽 6.333% 小写，mask_qc PASS |
-| 2 RNA 比对 | HISAT2 × 2 样本 | 比对率 70.96% / 79.94% |
-| 3 结构注释 | BRAKER ET → TSEBRA → AGAT | **5,384 基因 / BUSCO 99.0%**（基线拦截 3.1% → 单因素对照 → 修复） |
-| 4 功能注释 | DIAMOND×5 + InterProScan | **Any-Annotated 99.96%**（五库真菌适配） |
+```mermaid
+flowchart TD
+    A["你的数据<br/>短读 / Hi-C / RNA-seq / 已有组装"] --> B["数据识别<br/>有哪些数据？成对吗？交付目标？"]
+    B --> C["流程路由<br/>组装 / 接续挂载 / 注释"]
+    C --> D["环境预检 preflight<br/>调度器 · 工具链 · 资源预算"]
+    D --> E["SOP 包<br/>分步命令 + 每步坑位预警 + 人工检查点"]
+    E --> F["在你的服务器上执行<br/>（skill 不直接碰你的服务器）"]
+    F --> G["回传阶段成果"]
+    G --> H{"校验<br/>静默缺口检查 + 基线对照"}
+    H -- "通过，进入下一段" --> E
+    H -- "不通过" --> R["修复脚本 / 参数校正"]
+    R --> F
+    H -- "全部通过" --> P["毕业包<br/>可复用 SOP + 冻结 settings + 基线锚点"]
+```
 
-过程中捕获并硬化的真实缺陷：PIT-008（BRAKER 输入头 vs BAM 参考名，两次事故后 driver 自动 id-only）、PIT-009（TSEBRA 单外显子过滤器在内含子贫乏物种上滤掉 95% 真基因）、InterProScan GO 多值解析、ETP 蛋白环版本缺陷（如实降级 ET 模式并记录）。
+## 快速开始
 
-## 安装（Codex 优先）
+依赖：Python ≥3.9 + `jsonschema` + `PyYAML` + `pytest`。克隆仓库即可运行：
 
-本技能包面向 **Codex CLI**（默认格式）：包内含 `AGENTS.md`（每次会话自动携带的方法论与硬约束）+
+```bash
+# 识别数据 → 路由 → 生成带坑位预警的分步 SOP（示例文件名）
+python scripts/skill_coach.py SM_WGS_1.fq.gz SM_WGS_2.fq.gz SM_hic_all_1.fq.gz SM_hic_all_2.fq.gz
+
+# 静默缺口体检（9 条真实陷阱探测器）
+python scripts/run_pitfall_checks.py
+
+# 结果基线对照："这个数正常吗？"
+python scripts/check_baselines.py --taxon actinopterygii protein_coding_gene_count=23864
+
+# 全量回归（117 tests）
+python -m pytest -q
+```
+
+完整玩法见 [SKILL.md](SKILL.md)。
+
+## 安装为 Codex 技能
+
+本技能包面向 **Codex CLI**：包内含 `AGENTS.md`（每次会话自动携带的方法论与硬约束）+
 `commands/assembly-genomics.md`（按需触发的 slash 命令）+ 全部资产（scripts/knowledge/references…）。
 
 1. **获取包**：克隆仓库（`git clone https://github.com/JunyangLian/AssemblyGenomics-Skill.git`），
@@ -42,26 +69,7 @@
    #         资产目录保留在 ~/.codex/assembly-genomics/
    ```
 
-   之后每个 codex 会话自动携带本方法论；输入 `/assembly-genomics`（或描述“基因组组装/注释”
-   类任务）触发完整流程。`~/.codex/AGENTS.md` 已存在时会拒绝覆盖并提示手工合并。
-
-**其他平台**：ZCode 用户可用 `python scripts/package_skill.py --format zcode` 生成
-`<name>/SKILL.md` 形态包，放到 `~/.zcode/skills/` 或 `~/.agents/skills/`。
-
-> 本仓库同时是**开发仓库**（tests/、docs/ 全量）与 **skill 安装源**；`dist/` 下的 zip
-> 由 `package_skill.py` 本地生成（不入库；仓库未发布 Release zip）。实机路径已脱敏，settings 以 `templates/settings/` 为准。
-
-## 快速开始
-
-```bash
-# 依赖：Python ≥3.9 + jsonschema + PyYAML + pytest
-python -m pytest -q                    # 117 tests，全绿
-python scripts/skill_coach.py SM_WGS_1.fq.gz SM_WGS_2.fq.gz SM_hic_all_1.fq.gz SM_hic_all_2.fq.gz
-python scripts/check_baselines.py --taxon actinopterygii protein_coding_gene_count=23864
-python scripts/run_pitfall_checks.py
-```
-
-新手旅程：`skill_coach.py` 识别数据 → 路由 → 分步 SOP（每步挂坑位）→ `validate_project` → 逐段执行/回传校验 → 基线对照 → 毕业包。完整玩法见 `SKILL.md`。
+之后每个 codex 会话自动携带本方法论；输入 `/assembly-genomics`（或描述"基因组组装/注释"类任务）触发完整流程。`~/.codex/AGENTS.md` 已存在时会拒绝覆盖并提示手工合并。
 
 ## 目录结构
 
@@ -76,17 +84,11 @@ docs/                       # 决策记录、能力矩阵、用例实录、run_r
 tests/                      # 117 tests
 ```
 
-## 诚实的边界（发布口径）
-
-- 已验证：**注释全流程**（重复→RNA→结构→功能）在单倍体酵母上端到端跑通+校验；配置/模拟层机制全部测试覆盖
-- 未验证：**从原始读段组装**（酵母环输入为已发表组装；葡萄 #001 计划为真实组装案例）、ETP 蛋白环（GeneMark-ETP git 版缺陷，走 ET 模式并记录）、多倍体/分相交付、长读组装路线
-- 全部工具版本/数据库路径以各阶段 settings 为准；发布仓库请用 `templates/settings/` 脱敏模板，勿提交实机绝对路径（用户账号/服务器布局信息）
-
 ## 路线图
 
-1. 葡萄 #001（三倍体、单倍型分套）：毕业包换物种复用的第一次实战（换锚点/库/开关）
-2. GeneMark-ETP 缺陷修复后回归 ETP 模式，补齐蛋白证据
-3. 陷阱库/基线持续以真实案例扩充（每个新案例收割新种子）
+- 三倍体葡萄（短读 + Hi-C、单倍型分套交付）：毕业包换物种复用的第一次实战
+- GeneMark-ETP 缺陷修复后回归 ETP 模式，补齐蛋白证据
+- 陷阱库与基线随每个真实案例持续扩充
 
 ## License
 
