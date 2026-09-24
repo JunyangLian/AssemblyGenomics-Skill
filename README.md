@@ -64,4 +64,4 @@ tests/                      # 117 tests
 
 ## License
 
-待定（建议 MIT；由仓库所有者决定）。
+MIT License（Copyright (c) 2026 25jylian）· Hosted on GitHub：<https://github.com/JunyangLian/genome-assembly-copilot>
