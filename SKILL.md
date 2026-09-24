@@ -1,9 +1,9 @@
 ---
-name: genome-assembly-copilot-skill
+name: assembly-genomics
 description: 基因组组装/注释自适应流程 Copilot。当用户提到基因组组装、Hi-C 挂载、scaffolding、Juicebox 调图、BUSCO 评估、单倍型/hap1/hap2、purge_dups、污染或细胞器分离、重复屏蔽、结构/功能注释（MAKER/InterProScan/eggnog）、或有 fastq/fasta/gfa/bam 测序数据想组装、评估、注释时使用——即使用户没有明确说"组装"或"skill"。核心价值：LLM 自适应路线 + 代码层硬约束 + 强制人类审核门控 + 静默缺口（silent gap）检测。
 ---
 
-# GenomeAssembly Copilot
+# AssemblyGenomics Skill
 
 **目标用户：第一次独立搭建基因组组装/注释的新手。** 把用户的测序数据与交付目标，转成一条**可执行、带坑位预警、人类审核不可绕过**的组装/注释路线，手把手走到交付。skill 的价值不是"代码一次写对"，而是**捕获"能跑通但不完整"（silent gap）**：库版本过旧、步骤间结果未接续、参数被默认值吞掉——这些命令返回 0 却埋雷的情形。项目终点除结果外，还交付一套**属于用户自己的可复用流程 SOP 包**（冻结 settings/版本/检查点），此后用户可脱离 skill 自行复用。
 

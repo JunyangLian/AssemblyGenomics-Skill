@@ -10,7 +10,7 @@
 - 影响：`plan-m0-m1.md`、`competitive-analysis.md` 已按此落盘。
 
 ### D-002 项目根目录落位
-- 决策：项目文件直接落在工作根 `GenomeAssembly Copilot/`，不加一层 `genome-assembly-copilot/` 嵌套。
+- 决策：项目文件直接落在工作根 `AssemblyGenomics Skill/`，不加一层 `assembly-genomics/` 嵌套。
 - 理由：工作目录本身已是专用项目目录，嵌套一层同名目录增加无意义跳转。
 - 影响：全部文件相对工作根组织；若未来需移植到独立 repo，再整体改名。
 

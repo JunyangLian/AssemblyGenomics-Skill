@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://genomeassembly.copilot/schemas/project.schema.json",
-  "title": "GenomeAssembly Copilot 项目配置",
+  "title": "AssemblyGenomics Skill 项目配置",
   "description": "正式运行前必须满足的 schema 声明。用于校验枚举、路径、单位、样本角色与不兼容组合，而非只是判 YAML 能否解析。",
   "type": "object",
   "additionalProperties": false,

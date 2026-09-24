@@ -1,4 +1,4 @@
-# M0 + M1 实施规划：GenomeAssembly Copilot
+# M0 + M1 实施规划：AssemblyGenomics Skill
 
 > 编写日期：2026-09-21
 > 文档状态：实施规划，待审核。审核通过前只生产本计划文档，不创建项目代码、schema 或测试文件。
@@ -89,7 +89,7 @@
 ### 目录结构（落地版，含 Nextflow 预留）
 
 ```text
-genome-assembly-copilot/
+assembly-genomics/
   SKILL.md                        # 入口文档；简洁，细节指向 references/
   references/
     scope-and-routing.md
@@ -260,7 +260,7 @@ M1 只做第一类（配置/模拟）。由需求文档 14.2 的必测情形映�
 
 ## 待使用者审阅的决策点
 
-1. 目录根名用 `genome-assembly-copilot`（需求文档 11.2 拟议名）还是直接落在工作目录当前路径。
+1. 目录根名用 `assembly-genomics`（需求文档 11.2 拟议名）还是直接落在工作目录当前路径。
 2. M1 是否要求把 `workflows/adapters/` 与 `nextflow.config` 骨架一并产出，还是先做纯框架无关部分、Nextflow 边界留到 M2。
 3. 上述任何工程规格（状态词表、schema 字段、测试拆分）是否有需要调整之处。
 

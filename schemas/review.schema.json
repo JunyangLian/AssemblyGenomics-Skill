@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://genomeassembly.copilot/schemas/review.schema.json",
-  "title": "GenomeAssembly Copilot 审核记录",
+  "title": "AssemblyGenomics Skill 审核记录",
   "description": "审核包与人类审批记录。用于校验 hash 绑定、人类提交动作、以及恢复文件的合法归属。",
   "type": "object",
   "additionalProperties": false,

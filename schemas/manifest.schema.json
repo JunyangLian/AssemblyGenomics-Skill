@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://genomeassembly.copilot/schemas/manifest.schema.json",
-  "title": "GenomeAssembly Copilot 组装产物清单",
+  "title": "AssemblyGenomics Skill 组装产物清单",
   "description": "记录一次组装节点的产物身份、hash 绑定、软件版本、坐标/缩放与恢复输入位置。状态不在此处，状态由 run_registry 单独持久化。",
   "type": "object",
   "additionalProperties": false,

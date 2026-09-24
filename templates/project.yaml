@@ -1,4 +1,4 @@
-# GenomeAssembly Copilot 项目配置模板（backend A: SOP 包）
+# AssemblyGenomics Skill 项目配置模板（backend A: SOP 包）
 # 所有 null 表示未知；资源和交付目标未确认时不得启动正式任务。
 
 schema_version: 1

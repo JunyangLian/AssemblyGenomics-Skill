@@ -1,4 +1,4 @@
-# 竞争分析：GenomeAssembly Copilot
+# 竞争分析：AssemblyGenomics Skill
 
 > 编写日期：2026-09-21
 > 状态：两轮只读调研综合结论。调研不校验工具维护状态，结论以两轮检索当时的公开资料为准。

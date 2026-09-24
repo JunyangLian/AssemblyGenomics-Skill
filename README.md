@@ -1,4 +1,4 @@
-# GenomeAssembly Copilot
+# AssemblyGenomics Skill
 
 **帮助新手搭建第一套属于自己的基因组组装/注释流水线**——把测序数据与交付目标，变成一条可执行、带坑位预警、人类审核不可绕过、且每步都过基线校验的路线；项目走完，交付一套**属于你自己的可复用 SOP 毕业包**（D-020）。
 
@@ -27,8 +27,8 @@
 
 ## 安装为 ZCode skill（两步）
 
-1. **获取包**：克隆仓库（`git clone https://github.com/JunyangLian/genome-assembly-copilot-skill-skill.git`）
-   或下载 Release 里的 `genome-assembly-copilot-skill-<ver>.zip`；
+1. **获取包**：克隆仓库（`git clone https://github.com/JunyangLian/assembly-genomics-skill.git`）
+   或下载 Release 里的 `assembly-genomics-<ver>.zip`；
 2. **放进 skill 发现目录**（任选其一，Windows 也适用）：
 
    ```powershell
@@ -36,10 +36,10 @@
    python scripts/package_skill.py --install
    # 方式 B：手动——把整个包解成 <name>/ 目录放进
    #   %USERPROFILE%\.agents\skills\       （或 ~/.zcode/skills/）
-   #   最终形态：<skills>/genome-assembly-copilot-skill/SKILL.md
+   #   最终形态：<skills>/assembly-genomics/SKILL.md
    ```
 
-   新开会话后 `/skill genome-assembly-copilot-skill` 应能加载；或用数据文件名触发
+   新开会话后 `/skill assembly-genomics` 应能加载；或用数据文件名触发
    （description 中的触发词，如“基因组组装/注释”“Hi-C 挂载”）。
 
 > 本仓库同时是**开发仓库**（tests/、docs/ 全量）与 **skill 安装源**；`dist/` 下的 zip
@@ -84,4 +84,4 @@ tests/                      # 117 tests
 
 ## License
 
-MIT License（Copyright (c) 2026 25jylian）· Hosted on GitHub：<https://github.com/JunyangLian/genome-assembly-copilot-skill>
+MIT License（Copyright (c) 2026 25jylian）· Hosted on GitHub：<https://github.com/JunyangLian/assembly-genomics>

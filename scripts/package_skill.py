@@ -7,7 +7,7 @@
     python scripts/package_skill.py --dest DEST     # 指定安装目录（如 ~/.zcode/skills）
     python scripts/package_skill.py --version x.y.z # 覆盖版本号（默认读 git tag，回退 1.0.0）
 
-安装后验证：新开会话输入 /skill genome-assembly-copilot-skill 应能加载。
+安装后验证：新开会话输入 /skill assembly-genomics 应能加载。
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = "genome-assembly-copilot-skill"
+NAME = "assembly-genomics"
 
 # 安装包内容（skill 运行时需要的全部；tests/.git 等开发资产不进包）
 PACKAGE_ITEMS = [
@@ -83,7 +83,7 @@ def install(zip_path: Path, dest: Path) -> None:
         for member in zf.namelist():
             zf.extract(member, dest)
     print(f"[OK] 已安装到 {target}")
-    print("验证：新开会话，用 /skill 触发（description 里写了触发词），或直接 /skill genome-assembly-copilot-skill")
+    print("验证：新开会话，用 /skill 触发（description 里写了触发词），或直接 /skill assembly-genomics")
 
 
 def main() -> int:
