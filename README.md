@@ -25,22 +25,28 @@
 
 过程中捕获并硬化的真实缺陷：PIT-008（BRAKER 输入头 vs BAM 参考名，两次事故后 driver 自动 id-only）、PIT-009（TSEBRA 单外显子过滤器在内含子贫乏物种上滤掉 95% 真基因）、InterProScan GO 多值解析、ETP 蛋白环版本缺陷（如实降级 ET 模式并记录）。
 
-## 安装为 ZCode skill（两步）
+## 安装（Codex 优先）
 
-1. **获取包**：克隆仓库（`git clone https://github.com/JunyangLian/assembly-genomics-skill.git`）
-   或下载 Release 里的 `assembly-genomics-<ver>.zip`；
-2. **放进 skill 发现目录**（任选其一，Windows 也适用）：
+本技能包面向 **Codex CLI**（默认格式）：包内含 `AGENTS.md`（每次会话自动携带的方法论与硬约束）+
+`commands/assembly-genomics.md`（按需触发的 slash 命令）+ 全部资产（scripts/knowledge/references…）。
+
+1. **获取包**：克隆仓库（`git clone https://github.com/JunyangLian/AssemblyGenomics-Skill.git`）
+   或下载 Release 的 `assembly-genomics-<ver>.zip`；
+2. **安装**（PowerShell / bash 均可）：
 
    ```powershell
-   # 方式 A：Windows 用户级
+   # 一键安装到 ~/.codex（AGENTS.md + commands/ + 资产）
    python scripts/package_skill.py --install
-   # 方式 B：手动——把整个包解成 <name>/ 目录放进
-   #   %USERPROFILE%\.agents\skills\       （或 ~/.zcode/skills/）
-   #   最终形态：<skills>/assembly-genomics/SKILL.md
+   # 或手动：解压 zip，将 AGENTS.md 放入 ~/.codex/AGENTS.md，
+   #         commands/assembly-genomics.md 放入 ~/.codex/commands/，
+   #         资产目录保留在 ~/.codex/assembly-genomics/
    ```
 
-   新开会话后 `/skill assembly-genomics` 应能加载；或用数据文件名触发
-   （description 中的触发词，如“基因组组装/注释”“Hi-C 挂载”）。
+   之后每个 codex 会话自动携带本方法论；输入 `/assembly-genomics`（或描述“基因组组装/注释”
+   类任务）触发完整流程。`~/.codex/AGENTS.md` 已存在时会拒绝覆盖并提示手工合并。
+
+**其他平台**：ZCode 用户可用 `python scripts/package_skill.py --format zcode` 生成
+`<name>/SKILL.md` 形态包，放到 `~/.zcode/skills/` 或 `~/.agents/skills/`。
 
 > 本仓库同时是**开发仓库**（tests/、docs/ 全量）与 **skill 安装源**；`dist/` 下的 zip
 > 是免开发依赖的安装包。实机路径已脱敏，settings 以 `templates/settings/` 为准。
