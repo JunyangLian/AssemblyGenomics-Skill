@@ -1,0 +1,40 @@
+# 脱敏模板：${SERVER_HOME}/${SHARED_TOOLS}/${SHARED_DB} 为占位符，实跑时替换成实际绝对路径（勿提交真实路径）
+{
+  "run_id": "batch01",
+  "thread_budget": 32,
+  "softmasked_genome": "${SERVER_HOME}/yeast_test/sop/yeast_loop/stage1_repeat/runs/batch01/1.Repeat_Annotation/genome.softmasked.fa",
+  "expected_softmasked_sha256": "5bcafd653f2beb5ba54b3aef9742e33ef4506d066091dea297a99b8026d4bb46",
+  "samples_bams": [
+    {
+      "id": "WT_Rep1",
+      "bam": "${SERVER_HOME}/yeast_test/sop/yeast_loop/stage2_rnaseq/runs/batch01/2.RNAseq/bam/WT_Rep1.sorted.bam",
+      "expected_sha256": "9c841fc1ffd643221f746a33120c657b2ded29d89d1d17e952d59608731d1d76"
+    },
+    {
+      "id": "WT_Rep2",
+      "bam": "${SERVER_HOME}/yeast_test/sop/yeast_loop/stage2_rnaseq/runs/batch01/2.RNAseq/bam/WT_Rep2.sorted.bam",
+      "expected_sha256": "0d6a52bf824ee1f3069d24df741f8b3c6b87655f0f88f51be590b29ea72063fc"
+    }
+  ],
+  "protein_evidence_gz": "${SERVER_HOME}/yeast_test/0.Raw_Data/protein_evidence/uniprot_sprot.fasta.gz",
+  "expected_protein_gz_sha256": "a9c3496aa727e61d25d9e1291c9ba28d2c2ad19c0e26569dc083d53ec4169536",
+  "braker_env": "${SERVER_HOME}/env/braker3",
+  "braker_threads": 16,
+  "species": "SC288C_braker",
+  "intron_support": 0.8,
+  "agat_env": "${SHARED_TOOLS}/.conda/envs/agat",
+  "gffread": "${SHARED_TOOLS}/.conda/envs/braker3/bin/gffread",
+  "export_prefix": "SC288C.longest",
+  "busco": {
+    "python": "${SERVER_HOME}/env/busco5/bin/python",
+    "busco": "${SERVER_HOME}/env/busco5/bin/busco",
+    "lineage": "${SERVER_HOME}/busco_downloads/lineages/saccharomycetes_odb10",
+    "cpu": 16
+  },
+  "genemark_bin": "${SERVER_HOME}/env/GeneMark-ETP-main/bin/gmes",
+  "prothint_dir": "${SERVER_HOME}/env/ProtHint",
+  "samtools": "${SHARED_TOOLS}/.conda/envs/braker3/bin/samtools",
+  "use_protein_evidence": false,
+  "filter_single_exon_genes": false,
+  "busco_min_complete_pct": 95
+}

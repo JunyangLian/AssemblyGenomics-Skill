@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://genomeassembly.copilot/schemas/review.schema.json",
+  "title": "GenomeAssembly Copilot 审核记录",
+  "description": "审核包与人类审批记录。用于校验 hash 绑定、人类提交动作、以及恢复文件的合法归属。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["review_round_id", "project_id", "sample", "assembly_identity", "upstream_route", "binds_to", "status", "approval"],
+  "properties": {
+    "review_round_id": { "type": "string", "minLength": 1 },
+    "project_id": { "type": "string", "minLength": 1 },
+    "sample": { "type": "string" },
+    "assembly_identity": { "type": "string", "description": "本次审核对象（如 hap1/round_001）" },
+    "upstream_route": { "type": "string", "description": "上游路线（如 juicer-3ddna / yahs-jbat）" },
+    "binds_to": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_assembly_hash", "review_package_hash"],
+      "properties": {
+        "input_assembly_hash": { "type": "string" },
+        "review_package_hash": { "type": "string" }
+      }
+    },
+    "supporting_files": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "配套文件 hash（受控路径引用 / checksum）"
+    },
+    "software_versions": { "type": ["object", "null"] },
+    "scale_factor": { "type": ["string", "null"], "description": "YaHS/JBAT 缩放因子，取自日志或配置，不通用硬编码" },
+    "status": { "type": "string", "enum": ["accepted", "modified", "rejected", "undetermined"] },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approved_by_human", "submission_action"],
+      "properties": {
+        "approved_by_human": { "type": "boolean" },
+        "submission_action": { "type": ["string", "null"], "description": "必须非空：明确的人类提交动作标识" },
+        "timestamp": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+id: PIT-008
+title: BRAKER 输入 FASTA 头含空格/描述 → ETP 参考名与 BAM 不匹配，GeneMark 失败且提示误导
+phase: annotation
+step: 10
+commands:
+  - braker.pl
+  - gmetp.pl
+severity: warning
+symptom: |
+  BRAKER ETP 启动后失败：gmetp.pl 报 "does not match any sequence in the fasta file"
+  刷屏 + GeneMarkS error 256 + 缺 transcripts_merged.fasta.gff；BRAKER 的官方提示
+  "GeneMark-ETP didn't receive enough evidence" 把排查方向引向"证据不足"，
+  而真实根因只是参考名不一致。两度实跑：Siganus GCA048（v3 HEADER_FIX）与本酵母环。
+root_cause: |
+  参考基因组头含完整描述（空格）；HISAT2 建索引取首字段做参考名（@SQ=NC_001133.9），
+  BRAKER 净化器却把整行描述用下划线连接成 ID（NC_001133.9_Saccharomyces_...），
+  两侧参考名体系不一致，GeneMark 无法从 FASTA 提取对应转录本序列——流程失败
+  报错但提示"证据不足"，属于会误导的假线索。
+check:
+  language: shell
+  source: |
+    FA="$PIT_FASTA"; BAM="$PIT_BAM"
+    if [ -z "$FA" ] || [ -z "$BAM" ]; then
+      echo "需 PIT_FASTA 与 PIT_BAM——人工核对参考名一致性。"
+      exit 0
+    fi
+    diff <(grep '^>' "$FA" | cut -c2- | awk '{print $1}' | sort) \
+         <(samtools view -H "$BAM" 2>/dev/null | awk '/^@SQ/{print $2}' | cut -d: -f2 | sort) \
+      > /tmp/pit008.diff 2>/dev/null
+    if [ -s /tmp/pit008.diff ]; then
+      echo "缺口：FASTA 序列名与 BAM 参考名不一致（差异示例：）"
+      head -6 /tmp/pit008.diff
+      echo "——BRAKER 输入必须用 id-only 头（首字段）且与全部 BAM @SQ 完全一致（PIT-008）。"
+      exit 1
+    fi
+    echo "参考名一致。"
+    exit 0
+context_note: |
+  硬化规则：BRAKER 前生成 genome.id_only.softmasked.fa（头仅首字段），
+  校验 ID 唯一/逐序列长度/忽略大小写序列不变，并与全部 BAM 的 @SQ 集合完全一致，
+  不一致即停止。Siganus v3 与酵母 2026-09-23 两次实跑同款事故，两度才固化为
+  SOP 自动预检（driver 内嵌）。

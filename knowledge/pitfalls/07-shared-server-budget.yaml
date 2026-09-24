@@ -1,0 +1,44 @@
+id: PIT-007
+title: 共享服务器上线程/资源预算未经确认即拉满
+phase: general
+step: 0
+commands:
+  - "RepeatModeler"
+  - "braker.pl"
+  - "qsub"
+  - "sbatch"
+severity: warning
+symptom: |
+  流水线按全机核数（或沿用上一项目的默认线程数）启动，跑得通、不报错，
+  但在公用/多用途服务器上会拖慢他人任务、可能被管理员降权或直接 kill，
+  也可能与同机其他作业冲突。新手不会想到要先问"我能用多少"，
+  文档和示例命令里的 -p 48 / --threads 48 看起来就是"正常用法"。
+root_cause: |
+  线程预算是服务器策略问题（共享/独占、配额、管理员约定），不是技术参数——
+  工具文档、示例命令、甚至既往项目的 settings 都不会替你问。
+  skill 若沿用历史项目的预算默认值（如 Siganus 的 48 线程），就是把
+  上一台服务器的假设静默搬到下一台。资源数值必须来自用户显式确认。
+check:
+  language: shell
+  source: |
+    # 对比 SOP 线程预算与全机核数；未提供预算则退回人工，不臆断
+    if [ -z "$PIT_THREAD_BUDGET" ]; then
+      echo "未提供线程预算（PIT_THREAD_BUDGET）——共享服务器上不得默认拉满，需人工确认可用配额。"
+      exit 0
+    fi
+    total=$(nproc 2>/dev/null || echo "?")
+    if [ "$total" = "?" ]; then
+      echo "无法获取全机核数——预算 $PIT_THREAD_BUDGET 是否合适需人工确认。"
+      exit 0
+    fi
+    if [ "$PIT_THREAD_BUDGET" -ge "$total" ]; then
+      echo "缺口：线程预算 $PIT_THREAD_BUDGET ≥ 全机核数 $total——共享/多用途服务器上拉满不合适，须确认独占或调低。"
+      exit 1
+    fi
+    echo "线程预算 $PIT_THREAD_BUDGET < 全机核数 $total（数值合理性 OK）；是否独占/配额仍需人工确认。"
+    exit 0
+context_note: |
+  用户 2026-09-22 指出：skill 在 yeast SOP 规划中默认沿用 48 线程预算而未询问。
+  这是 D-011 方向的又一次实证：专家的服务器礼仪常识（先问能用多少）
+  正是新手最容易忽略的"跑通但不合适"。资源数值一律来自用户显式确认，
+  不沿用默认、不沿用上一项目。

@@ -1,0 +1,52 @@
+id: PIT-005
+title: 注释 GFF3 残留无编码内容的 gene/transcript，基因计数虚高
+phase: annotation
+step: 10
+commands:
+  - agat_sp_keep_longest_isoform.pl
+  - tsebra.py
+  - "braker.gff3"
+severity: warning
+symptom: |
+  最终注释 GFF3 的 gene 计数远高于编码基因数，但每条记录 ID 唯一、Parent
+  关系完整，常规检查（重复 ID、缺 Parent）全部发现不了。
+  Siganus 真实案例：AGAT 输出 47,848 个 gene，其中 28,596 个 transcript
+  既无 CDS 也无 exon；只看"gene 有子节点"无法识别这些空壳分支。
+  直接把 47,848 当"基因数"写进报告会虚高约一倍。
+root_cause: |
+  TSEBRA 合并/AGAT 最长转录本筛选后残留了无编码内容的 gene 与 transcript
+  记录（具体产生机制未追溯到某软件的某行代码，不写成已证实缺陷）。
+  这属于"能跑通但不完整/不干净"的静默缺口；交付前应导出 coding-only 子集
+  （Siganus 案例的 export_coding_gff3.py 做法是：按 CDS 关联保留编码转录本
+  及其 gene，并逐 ID 验证蛋白/CDS 序列完全不变）。
+check:
+  language: shell
+  source: |
+    # 统计 gene 总数 vs 含 CDS 子特征的 gene 数；未提供文件则退回需人工
+    GFF="$PIT_GFF3"
+    if [ -z "$GFF" ] || [ ! -f "$GFF" ]; then
+      echo "未提供 PIT_GFF3（结构注释 GFF3/GTF 路径）——需人工核对 gene 数与编码 gene 数是否一致。"
+      exit 0
+    fi
+    awk -F'\t' '
+      NR==FNR { if ($0 !~ /^#/ && $3=="CDS") { if (match($9, /Parent=[^;]+/)) t[substr($9, RSTART+7, RLENGTH-7)] = 1 } ; next }
+      $0 !~ /^#/ {
+        if ($3=="gene") ng++
+        else if ($3=="mRNA" || $3=="transcript") {
+          if (match($9, /ID=[^;]+/)) {
+            id = substr($9, RSTART+3, RLENGTH-3)
+            if (id in t && match($9, /Parent=[^;]+/)) hasc[substr($9, RSTART+7, RLENGTH-7)] = 1
+          }
+        }
+      }
+      END {
+        nc = 0; for (g in hasc) nc++
+        printf "gene_total=%d gene_with_coding_transcript=%d\n", ng+0, nc
+        if (nc > 0 && ng > nc * 1.05)
+          printf "缺口：%d 个 gene 中仅 %d 个含编码转录本——存在无编码内容残留，基因数虚高，交付前应导出 coding-only 子集。\n", ng, nc
+      }
+    ' "$GFF" "$GFF"
+    exit 0
+context_note: |
+  来源：Siganus_self 结构注释真实记录第 10 节（含 47,848 vs 23,924 的逐 feature 计数表）。
+  注意：排除无 CDS 记录不等于证明它们是真实非编码基因，只是让"编码基因数"名副其实。

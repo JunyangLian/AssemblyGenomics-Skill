@@ -1,0 +1,78 @@
+# 辐鳍鱼类（actinopterygii）注释指标基线。
+# 首版种子：全部 case_reference（Siganus canaliculatus 真实交付，use-case-002），
+# 仅 advisory 提示；升级 published/enforce 须按 README 流程补文献引用。
+- id: BASE-001
+  metric: protein_coding_gene_count
+  taxon_scope: actinopterygii
+  unit: genes
+  expected_range: [15000, 45000]
+  source_type: case_reference
+  enforce: false
+  references:
+    - text: "Siganus canaliculatus self 注释交付 23,924 编码基因（本项目 use-case-002，BUSCO 97.4%）"
+      doi: null
+  notes: >
+    常见真骨鱼类交付多在两万至三万级。合法偏高：近期全基因组加倍谱系
+    （鲑科、鲤科四倍体）可显著更多——须先核对倍性证据再下结论。
+    非法偏离的常见根因：GFF3 残留非编码 gene 虚高（PIT-005）、TSEBRA 过滤
+    过严丢失（PIT-002）、组装碎片化导致基因拆分。
+
+- id: BASE-002
+  metric: annotation_busco_complete_pct
+  taxon_scope: actinopterygii
+  unit: percent
+  expected_range: [85, 100]
+  source_type: case_reference
+  enforce: false
+  references:
+    - text: "Siganus 默认参数 93.3%（后定位为 TSEBRA 损失，PIT-002）；修复后 97.4%（use-case-002）"
+      doi: null
+  notes: >
+    染色体级组装的正式注释交付通常应 >90%。低于 85 大概率是流程问题而非
+    生物学现实（优先查 PIT-002/PIT-006/PIT-005）。注意用 proteins 模式，
+    genome 模式受 PIT-003 影响不可信。
+
+- id: BASE-003
+  metric: repeat_masked_pct
+  taxon_scope: actinopterygii
+  unit: percent
+  expected_range: [5, 45]
+  source_type: case_reference
+  enforce: false
+  references:
+    - text: "Siganus 软屏蔽 11.98%（512,514,567 bp 中 61,391,355 bp 小写，use-case-002）"
+      doi: null
+  notes: >
+    鱼类跨度大（紧凑基因组偏低、TE 膨胀谱系偏高），本带故意放宽。
+    显著低于 5% 先查 PIT-006（软屏蔽失效）与 PIT-001（Dfam 过旧）——
+    这两个都是"跑通但屏蔽量悄悄缩水"的已知真实坑。
+
+- id: BASE-004
+  metric: median_protein_length_aa
+  taxon_scope: actinopterygii
+  unit: aa
+  expected_range: [300, 550]
+  source_type: case_reference
+  enforce: false
+  references:
+    - text: "Siganus 交付集 418 aa（改进前 395，use-case-002 第 1 节对照表）"
+      doi: null
+  notes: >
+    中位数异常偏短常提示内部终止/截断污染（查 PIT-004）或基因模型碎裂；
+    异常偏长提示融合模型。中位数对极端值稳健，单项偏离不必恐慌，
+    结合分布与 BUSCO 一起看。
+
+- id: BASE-005
+  metric: functional_any_annotated_pct
+  taxon_scope: actinopterygii
+  unit: percent
+  expected_range: [70, 95]
+  source_type: case_reference
+  enforce: false
+  references:
+    - text: "Siganus Qatar 交付 Any-Annotated 86.09%（26,467 代表序列，use-case-002）"
+      doi: null
+  notes: >
+    覆盖率过低先分库排查（哪个库拖低了并集），再查输入蛋白质量
+    （PIT-004）与比对参数；过高（>98%）反而要怀疑阈值过松或库污染。
+    分母口径必须一致（gene_representative vs 全部异构体）。

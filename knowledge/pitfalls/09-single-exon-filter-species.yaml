@@ -1,0 +1,26 @@
+id: PIT-009
+title: TSEBRA 单外显子过滤器是物种内含子含量依赖的——内含子贫乏物种上会滤掉绝大多数真基因
+phase: annotation
+step: 10
+commands:
+  - tsebra.py
+  - "--filter_single_exon_genes"
+severity: critical
+symptom: |
+  整条 BRAKER→TSEBRA 链"跑通"，注释的基因数却只有同物种锚点的 ~3-4%，
+  而 BUSCO 完整度（若跑了）同样坍缩（酵母实测 C:3.1%）。无任何报错。
+  Siganus 经验（鱼，内含子丰富）里"应当保留单外显子过滤"，换个物种就变成灾难：
+  酵母实测单因素对照——开过滤 221 基因 / 关过滤 5,384 基因，相差 24 倍。
+root_cause: |
+  `--filter_single_exon_genes` 滤除"无起始/终止 hint 支持的单外显子基因"。
+  在鱼等内含子丰富真核里单外显子多为假基因（滤掉有益，Siganus 实证）；
+  在酵母等内含子贫乏物种（全基因组仅约 5% 基因含内含子）里，单外显子是真基因主体，
+  该过滤器把 ~95% 的真实注释当垃圾滤掉——与 intron_support 阈值（PIT-002）同类，
+  即"后处理参数在跨物种时必须重新做单因素对照"。
+check: {}
+context_note: |
+  酵母 2026-09-24 实跑（models.gtf 221 vs models_nofilter.gtf 5384，BUSCO 3.1% vs 99.0%）。
+  固化规则：SOP 的 TSEBRA 配置中该开关必须经 settings 显式声明（默认按参考案例继承，
+  换物种必须对照实验复核），并与 PIT-002 同列为"物种依赖参数"。无自动检查（对照实验
+  需完整跑一轮），退回需人工——但检出脚本应在 SOP settings 出现该开关时为 false 且
+  物种为已知内含子贫乏类群（如酵母）时给出提示。

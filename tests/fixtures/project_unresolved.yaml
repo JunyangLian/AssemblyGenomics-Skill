@@ -1,0 +1,19 @@
+# Blocking fixture: delivery.representation explicitly unresolved.
+schema_version: 1
+project_id: test_unresolved
+sample:
+  id: test_sample
+  mixed_sample: false
+delivery:
+  representation: unresolved
+inputs:
+  libraries:
+    - library_id: lib_wgs_01
+      technology: illumina_wgs
+      sample_role: proband
+execution:
+  backend: sop_package
+  cpu_limit: 16
+  memory_gb_limit: 32
+  disk_gb_limit: 300
+  allow_remote_upload: false

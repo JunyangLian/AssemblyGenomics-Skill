@@ -1,0 +1,79 @@
+# 酵母闭环项目配置（冻结版，2026-09-22 intake + 预算确认后）
+schema_version: 1
+project_id: yeast_s288c_loop
+run_id: batch01
+sample:
+  id: S288C
+  organism: Saccharomyces cerevisiae
+  taxid: 4932
+  ploidy: 1
+  ploidy_evidence: "单倍体参考菌株（RefSeq R64，17 序列 = 16 核染色体 + MT，实测 12,157,105 bp）"
+  genome_size_bp: 12157105
+  genome_size_basis: "由 GCF_000146045.2 FASTA 实测"
+  mixed_sample: false
+delivery:
+  representation: primary_reference
+  phase_scope_required: false
+  parental_identity_required: false
+  organelle_policy: review_and_separate
+inputs:
+  libraries:
+    - library_id: rnaseq_A
+      technology: illumina_wgs
+      technology_source: metadata_declared
+      library_type: rna_seq
+      read_files: []            # 待选定 SRA run 后填入
+      sample_role: proband
+    - library_id: rnaseq_B
+      technology: illumina_wgs
+      technology_source: metadata_declared
+      library_type: rna_seq
+      read_files: []            # 待选定 SRA run 后填入
+      sample_role: proband
+  existing_assembly:
+    path: ${HOME}/yeast_test/0.Raw_Data/genome/GCF_000146045.2_R64_genomic.fna.gz
+    version: "R64 (GCF_000146045.2)"
+    origin: "NCBI RefSeq"
+    hash: null                   # 用 0.Raw_Data 的 md5checksums 值，待回填
+execution:
+  backend: sop_package
+  scheduler: sge
+  cpu_limit: 32                 # D-019 用户显式确认（2026-09-22）
+  memory_gb_limit: 64
+  disk_gb_limit: 100
+  allow_remote_upload: false
+  tool_versions: null
+baselines:
+  status: selected
+  references:
+    - kind: published_genome_annotation
+      organism: Saccharomyces cerevisiae S288C
+      accession_or_doi: GCF_000146045.2
+      url: "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/146/045/GCF_000146045.2_R64/"
+      why: "同种同株最新 RefSeq 注释（R64），基因数/BUSCO 对照锚；实测 6,459 gene / 6,386 CDS / 6,021 protein"
+  metric_overrides:
+    - metric: functional_any_annotated_pct
+      expected_range: [95, 100]
+      enforce: false
+      based_on: "酵母环 2026-09-24 观测 99.96%（五库并集；模式生物）；首版带 [80,99] advisory 经观测校准"
+      notes: "同源注释并集覆盖率；显著偏离时按库逐一排查"
+    - metric: protein_coding_gene_count
+      expected_range: [5000, 7200]
+      enforce: true
+      based_on: "GCF_000146045.2 锚点 CDS=6386；酵母环观测 5,384（ET de novo 不含 RefSeq 审编集的 ~500-600 个 dubious ORF 相关 CDS），带下沿按观测校准"
+      notes: "数量带为'证据模式分层'推导：de novo(ET) vs 人工审编集；若走 ETP 模式再按实测复校"
+    - metric: annotation_busco_complete_pct
+      expected_range: [95, 100]
+      enforce: true
+      based_on: "GCF_000146045.2（锚点自跑 BUSCO 后收紧）"
+      notes: "酵母模式生物，参考完整度应接近满"
+    - metric: repeat_masked_pct
+      expected_range: [1, 10]
+      enforce: false
+      based_on: "暂定参考带（advisory），文献引用待补；鱼类表 [5,45] 不适用故项目级覆盖"
+      notes: "酵母重复以 TY LTR 为主，含量低；段 1 实测 6.333% 落在带内"
+    - metric: median_protein_length_aa
+      expected_range: [318, 476]
+      enforce: true
+      based_on: "GCF_000146045.2 锚点蛋白中位数 397 ±20%"
+      notes: "交付蛋白集长度分布与锚点偏离 ±20% 即 GAP"

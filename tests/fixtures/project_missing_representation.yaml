@@ -1,0 +1,20 @@
+# Blocking fixture: delivery.representation not declared.
+schema_version: 1
+project_id: test_no_rep
+sample:
+  id: test_sample
+  mixed_sample: false
+delivery:
+  phase_scope_required: false
+  parental_identity_required: false
+inputs:
+  libraries:
+    - library_id: lib_wgs_01
+      technology: illumina_wgs
+      sample_role: proband
+execution:
+  backend: sop_package
+  cpu_limit: 16
+  memory_gb_limit: 32
+  disk_gb_limit: 300
+  allow_remote_upload: false

@@ -1,0 +1,45 @@
+id: PIT-003
+title: BUSCO genome 模式（--miniprot）的内部终止密码子统计不可信
+phase: annotation
+step: 10
+commands:
+  - busco
+  - miniprot
+severity: warning
+symptom: |
+  BUSCO genome 模式报告的 E 值（含内部终止密码子的完整 BUSCO）和"内部终止
+  数"不可信：BUSCO 6.1.0 的 miniprot.py 按固定列号读取 PAF，把 `da:i`
+  （起始密码子距离）误当成 `st:i`（终止密码子计数）。
+  Siganus 真实案例：报告 E:6.9% / 252 个内部终止，与 FASTA 逐条核对不符
+  （同数据 proteins 模式无此问题）。
+root_cause: |
+  BUSCO 6.1.0 与 miniprot 0.18-r281 输出字段兼容问题（miniprot.py
+  `fields[17]` 固定索引解析）。组装层面的 C/S/D 命中选择也可能受影响，
+  不只是 E 值一行。把这份报告写进论文或质控结论即引入错误数字。
+check:
+  language: shell
+  source: |
+    # 探测 BUSCO 版本；无法探测则退回需人工，不臆断
+    BUSCO_BIN="${BUSCO_BIN:-busco}"
+    if ! command -v "$BUSCO_BIN" >/dev/null 2>&1; then
+      echo "未找到 busco 可执行文件——需人工确认版本与评估模式。"
+      exit 0
+    fi
+    ver=$("$BUSCO_BIN" --version 2>/dev/null | head -1 | awk '{print $NF}')
+    case "$ver" in
+      6.1.0|6.0*)
+        echo "缺口：BUSCO $ver 的 genome 模式 + --miniprot 会误读 miniprot 停止密码子字段（E 值/内部终止数不可信）。完整性评估请用 proteins 模式；genome 模式结论须先独立修复字段解析。"
+        exit 1
+        ;;
+      "")
+        echo "无法解析 BUSCO 版本——需人工确认。"
+        exit 0
+        ;;
+      *)
+        echo "BUSCO $ver：需人工核对该版本 miniprot.py 的 st:i 字段解析是否已修复。"
+        exit 0
+        ;;
+    esac
+context_note: |
+  来源：Siganus_self 结构注释真实记录第 8.1 节（含 PAF 逐字段核对证据）。
+  修复思路：按 PAF 标签名解析而非固定索引；修复前 genome-mode 结果只作线索不作结论。

@@ -1,0 +1,44 @@
+id: PIT-002
+title: TSEBRA intron_support 默认 1.0 过严，合并阶段悄悄丢完整基因
+phase: annotation
+step: 10
+commands:
+  - tsebra.py
+  - braker3.cfg
+  - "BRAKER3"
+severity: warning
+symptom: |
+  BRAKER3 / TSEBRA 全流程正常完成、无任何报错，但最终注释的 BUSCO 完整度
+  明显低于中间模型（AUGUSTUS/GeneMark 单独评估时都更高）。
+  Siganus 真实案例：默认参数最终集 BUSCO 仅 93.3%，受控对照定位到损失主要
+  发生在 TSEBRA 合并筛选；仅把 intron_support 1.0→0.8（其余配置不变、保留
+  单外显子过滤）即升至 97.4%，净增 150 个 complete。同一输入重新合并即可复现。
+root_cause: |
+  官方默认 braker3.cfg 的 intron_support 1.0 要求普通模型具备完全内含子证据
+  支持才保留；RNA 覆盖不均时大量真实基因被过滤。流程"成功结束"完全掩盖了
+  这一步的质量损失——属于最典型的 silent gap，只有受控对照（同输入重合并 +
+  BUSCO 逐 ID 对照）才能定位。注意：0.8 是本次验证有效的候选值，
+  不是对所有物种都最优。
+check:
+  language: shell
+  source: |
+    # 探测实际使用的 TSEBRA 配置；未提供路径则退回需人工，不臆断
+    CFG="$TSEBRA_CFG"
+    if [ -z "$CFG" ] || [ ! -f "$CFG" ]; then
+      echo "未提供 TSEBRA_CFG（实际使用的 braker3.cfg 路径）——需人工确认 intron_support 取值。"
+      exit 0
+    fi
+    val=$(awk '$1=="intron_support"{print $2}' "$CFG" | head -1)
+    if [ -z "$val" ]; then
+      echo "配置中未发现 intron_support 字段（$CFG）——需人工确认实际生效配置。"
+      exit 0
+    fi
+    if [ "$val" = "1.0" ] || [ "$val" = "1" ]; then
+      echo "缺口：intron_support=1.0（官方默认，对 RNA 覆盖不均的数据过严，真实案例损失约 4 个百分点 BUSCO）——建议受控对照评估后决定是否调低（如 0.8）。"
+      exit 1
+    fi
+    echo "intron_support=$val（非默认 1.0）；该取值是否对本数据最优仍需 BUSCO 受控对照佐证。"
+    exit 0
+context_note: |
+  来源：Siganus_self 结构注释真实记录（docs/case-siganus/Siganus_self_Structural_Annotation_Record.md 第 8 节）。
+  全项目最重要的真实 silent gap 种子：流程跑通 ≠ 注释完整。

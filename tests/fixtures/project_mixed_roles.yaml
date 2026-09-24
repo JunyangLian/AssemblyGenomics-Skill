@@ -1,0 +1,22 @@
+# Blocking fixture: mixed/proband conflict (two proband libraries) + missing sample_role on second lib.
+schema_version: 1
+project_id: test_mixed
+sample:
+  id: test_sample
+  mixed_sample: true
+delivery:
+  representation: primary_reference
+inputs:
+  libraries:
+    - library_id: lib_wgs_01
+      technology: illumina_wgs
+      sample_role: proband
+    - library_id: lib_wgs_02
+      technology: illumina_wgs
+      # sample_role omitted -> blocked
+execution:
+  backend: sop_package
+  cpu_limit: 16
+  memory_gb_limit: 32
+  disk_gb_limit: 300
+  allow_remote_upload: false

@@ -1,0 +1,21 @@
+{
+  "route": "juicer_3ddna",
+  "frozen_flow": "use-case-001",
+  "steps": ["juicer_hic", "3d_dna_scaffold", "juicebox_human_gate"],
+  "tools": {
+    "juicer": {"env": "JUICER_SH", "version": "1.6+", "human_gate": false},
+    "3d-dna": {"env": "RUN_ASM_PIPELINE_SH", "version": "180922+", "human_gate": false},
+    "juicebox": {"env": "JUICER_JAR", "version": "1.11+", "human_gate": true, "note": "人工调图，不可自动化代替"}
+  },
+  "channels": {
+    "input": ["draft_fasta", "hic_r1", "hic_r2", "reference", "sample_id"],
+    "output": ["scaffold_gfa", "lowq_bed", "hic_matrix"]
+  },
+  "human_gate": {
+    "after": "3d_dna_scaffold",
+    "tool": "juicebox",
+    "required_state": "WAITING_REVIEW",
+    "approve_transition": "approved -> proceed to haplotig purge"
+  },
+  "constraint": "BAM 不默认等于组装源；Hi-C 互作必须来自 Hi-C FASTQ + Juicer，不由任意 bam 推断"
+}

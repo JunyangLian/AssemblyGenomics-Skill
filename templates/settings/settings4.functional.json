@@ -1,0 +1,69 @@
+# 脱敏模板：${SERVER_HOME}/${SHARED_TOOLS}/${SHARED_DB} 为占位符，实跑时替换成实际绝对路径（勿提交真实路径）
+{
+  "run_id": "batch01",
+  "thread_budget": 32,
+  "diamond_threads": 16,
+  "interpro_cpu": 16,
+  "input_proteins": "${SERVER_HOME}/yeast_test/sop/yeast_loop/stage3_braker/runs/batch01/4.BRAKER3/5.Longest/SC288C.nofilter.longest.pep.fa",
+  "expected_input_sha256": "c3258d39041952157003d6434362573172a775a408dd9fd45ff50f7fd57807af",
+  "expected_protein_count": 5384,
+  "tools": {
+    "diamond": "${SHARED_TOOLS}/.conda/envs/braker3/bin/diamond",
+    "interproscan": "${SHARED_TOOLS}/ann/interproscan-5.76-107.0/interproscan.sh",
+    "java11": "${SERVER_HOME}/env/java11"
+  },
+  "diamond": {
+    "evalue": "1e-5",
+    "max_target_seqs": 25,
+    "max_hsps": 1,
+    "very_sensitive": true,
+    "qcov_filter_pct": 50,
+    "ambiguity_bitscore_frac": 0.05,
+    "outfmt_cols": [
+      "qseqid",
+      "sseqid",
+      "pident",
+      "length",
+      "mismatch",
+      "gapopen",
+      "qstart",
+      "qend",
+      "sstart",
+      "send",
+      "evalue",
+      "bitscore",
+      "qlen",
+      "slen",
+      "qcovhsp",
+      "scovhsp",
+      "stitle"
+    ]
+  },
+  "databases": {
+    "NR": {
+      "db": "${SHARED_DB}/nr_20240416_diamond_v2.1.9.163/fungi.fa.dmnd",
+      "annot": null,
+      "note": "真菌子集（酵母适配；非 Siganus 的动物子集）"
+    },
+    "Swissprot": {
+      "db": "${SHARED_DB}/swissport/diamond/uniprot_sprot.Eukaryota.fasta.simple.dmnd",
+      "annot": "${SHARED_DB}/swissport/uniprot_sprot.Eukaryota.id.annot.xls",
+      "note": "真核（含真菌）"
+    },
+    "KEGG": {
+      "db": "${SHARED_DB}/kegg/101.0/kegg_all_clean.fa.dmnd",
+      "annot": "${SHARED_DB}/kegg/101.0/kegg_all_clean.id.annot.xls",
+      "note": "全库版（含真菌；非 animal 子集）"
+    },
+    "KOG": {
+      "db": "${SHARED_DB}/kog/20090331/kog_clean.fa.dmnd",
+      "annot": "${SHARED_DB}/kog/20090331/kog_clean.fa.id",
+      "note": "KOG 模式生物全集"
+    },
+    "TrEMBL": {
+      "db": "${SHARED_DB}/trembl/uniprot_trembl.Eukaryota.fasta.simple.dmnd",
+      "annot": "${SHARED_DB}/trembl/uniprot_trembl.Eukaryota.fasta.simple.ann.tsv",
+      "note": "真核（含真菌）"
+    }
+  }
+}

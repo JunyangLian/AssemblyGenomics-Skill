@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://genomeassembly.copilot/schemas/manifest.schema.json",
+  "title": "GenomeAssembly Copilot 组装产物清单",
+  "description": "记录一次组装节点的产物身份、hash 绑定、软件版本、坐标/缩放与恢复输入位置。状态不在此处，状态由 run_registry 单独持久化。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest_version", "run_id", "project_id", "sample",
+    "assembly_identity", "upstream_route", "fasta",
+    "generated_at", "restore_inputs"
+  ],
+  "properties": {
+    "manifest_version": { "const": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "project_id": { "type": "string", "minLength": 1 },
+    "sample": { "type": "string", "description": "样本 id" },
+    "assembly_identity": { "type": "string", "description": "本次组装身份，如 hap1/round_001" },
+    "upstream_route": { "type": "string", "description": "上游路线，如 juicer-3ddna / yahs-jbat" },
+    "fasta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "产物 FASTA 的 sha256，作 hash 绑定依据" },
+        "size_bp": { "type": ["integer", "null"], "exclusiveMinimum": 0 }
+      }
+    },
+    "supporting_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "role"],
+        "properties": {
+          "path": { "type": "string" },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "role": { "type": "string" }
+        }
+      }
+    },
+    "software_versions": {
+      "type": ["object", "null"],
+      "additionalProperties": { "type": "string" },
+      "description": "工具/资源版本映射，版本锁定依据"
+    },
+    "scale_factor": { "type": ["string", "null"] },
+    "coords_or_scale": { "type": ["string", "null"], "description": "坐标系统或缩放信息" },
+    "generated_at": { "type": "string", "description": "ISO8601 生成时间" },
+    "restore_inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "note"],
+        "properties": {
+          "path": { "type": "string", "description": "过大文件的受控路径引用，不全量复制到本地" },
+          "checksum": { "type": ["string", "null"] },
+          "note": { "type": "string" }
+        }
+      },
+      "description": "恢复输入位置；大文件以路径+校验值引用，不落全量副本"
+    }
+  }
+}

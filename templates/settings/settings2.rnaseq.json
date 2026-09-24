@@ -1,0 +1,33 @@
+# 脱敏模板：${SERVER_HOME}/${SHARED_TOOLS}/${SHARED_DB} 为占位符，实跑时替换成实际绝对路径（勿提交真实路径）
+{
+  "run_id": "batch01",
+  "thread_budget": 32,
+  "softmasked_genome": "${SERVER_HOME}/yeast_test/sop/yeast_loop/stage1_repeat/runs/batch01/1.Repeat_Annotation/genome.softmasked.fa",
+  "expected_softmasked_sha256": "5bcafd653f2beb5ba54b3aef9742e33ef4506d066091dea297a99b8026d4bb46",
+  "tools": {
+    "hisat2": "${SHARED_TOOLS}/.conda/envs/hisat2/bin/hisat2",
+    "hisat2_build": "${SHARED_TOOLS}/.conda/envs/hisat2/bin/hisat2-build",
+    "samtools": "${SHARED_TOOLS}/.conda/envs/braker3/bin/samtools"
+  },
+  "hisat2_threads": 16,
+  "sort_threads": 4,
+  "hisat2_extra": [
+    "--dta",
+    "--no-unal"
+  ],
+  "index_prefix": "SC288C",
+  "samples": [
+    {
+      "id": "WT_Rep1",
+      "srr": "SRR40431829",
+      "r1": "${SERVER_HOME}/yeast_test/0.Raw_Data/rnaseq/WT_Rep1_1.fq.gz",
+      "r2": "${SERVER_HOME}/yeast_test/0.Raw_Data/rnaseq/WT_Rep1_2.fq.gz"
+    },
+    {
+      "id": "WT_Rep2",
+      "srr": "SRR40431828",
+      "r1": "${SERVER_HOME}/yeast_test/0.Raw_Data/rnaseq/WT_Rep2_1.fq.gz",
+      "r2": "${SERVER_HOME}/yeast_test/0.Raw_Data/rnaseq/WT_Rep2_2.fq.gz"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+id: PIT-001
+title: Dfam 重复序列库版本过旧，屏蔽不完整
+phase: annotation
+step: 10
+commands:
+  - RepeatModeler
+  - RepeatMasker
+  - "RepeatMasker/DFAM_*.embl"
+severity: warning
+symptom: |
+  RepeatMasker / RepeatModeler 正常跑通（返回成功、日志无报错），
+  但基因组重复区域屏蔽量（masked %) 明显偏低，注释结果被误导。
+  根因是运行使用的 Dfam 数据库版本过旧：只下载了 dfam0 旧库，
+  未同步到最新 Dfam（含最新 TE 家族），大量重复被漏屏蔽。
+root_cause: |
+  流程可"跑通但不完整"：旧版库不存在于预期路径时报错，
+  但一旦某路径下有任意旧版库，RepeatMasker 会静默使用它，不提示版本陈旧。
+  新手常只下载 dfam0 而漏掉最新版，系统不警告。
+check:
+  language: shell
+  source: |
+    # 探测当前 Dfam 库，若版本过旧或无 TE 条目则判定缺口
+    DBM="$PIT_DB_DIR"
+    if [ -z "$DBM" ] || [ ! -d "$DBM" ]; then
+      echo "Dfam 库目录未提供或不存在（$DBM）——跳过自动版本校验，需人工确认。"
+      exit 0
+    fi
+    # 期望至少存在一个 Dfam_* 数据库文件且版本 > 3.x
+    found=$(ls -1 "$DBM"/Dfam_consensus.embl* "$DBM"/Dfam_*.embl 2>/dev/null | head -1)
+    if [ -z "$found" ]; then
+      echo "缺口：未找到 Dfam 库文件（$DBM）"
+      exit 1
+    fi
+    echo "检测到 Dfam 库: $found（有无足够的 TE 条目请人工/日志确认）"
+    exit 0
+context_note: |
+  用户真实踩坑记录。作为沉默弱缺口示范：
+  它没让流程报错，但让 RepeatMasker 的屏蔽量和注释质量大打折扣。

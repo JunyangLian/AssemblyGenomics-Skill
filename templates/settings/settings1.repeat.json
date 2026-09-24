@@ -1,0 +1,24 @@
+# 脱敏模板：${SERVER_HOME}/${SHARED_TOOLS}/${SHARED_DB} 为占位符，实跑时替换成实际绝对路径（勿提交真实路径）
+{
+  "run_id": "batch01",
+  "thread_budget": 32,
+  "memory_gb_limit": 64,
+  "disk_gb_limit": 100,
+  "genome_gz": "${SERVER_HOME}/yeast_test/0.Raw_Data/genome/GCF_000146045.2_R64_genomic.fna.gz",
+  "repeat": {
+    "env_bin": "${SHARED_TOOLS}/.conda/envs/repeat_annotation/bin",
+    "env_python": "${SHARED_TOOLS}/.conda/envs/repeat_annotation/bin/python",
+    "repeatmodeler": "${SHARED_TOOLS}/.conda/envs/repeat_annotation/bin/RepeatModeler",
+    "builddatabase": "${SHARED_TOOLS}/.conda/envs/repeat_annotation/bin/BuildDatabase",
+    "repeatmasker": "${SHARED_TOOLS}/.conda/envs/repeat_annotation/bin/RepeatMasker",
+    "famdb": "${SHARED_TOOLS}/.conda/envs/repeat_annotation/share/RepeatMasker/famdb.py",
+    "db_prefix": "SC288C",
+    "repeatmodeler_threads": 16,
+    "repeatmasker_pa": 16,
+    "repeatmasker_engine": "rmblast"
+  },
+  "anchor": {
+    "name": "GCF_000146045.2_R64",
+    "note": "基线锚（D-016）；本阶段对照：repeat_masked_pct 项目带 [1, 10]（advisory）"
+  }
+}

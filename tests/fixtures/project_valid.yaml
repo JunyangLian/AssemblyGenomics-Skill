@@ -1,0 +1,31 @@
+# Valid project fixture for M1 tests (backend A SOP).
+schema_version: 1
+project_id: test_valid
+sample:
+  id: test_sample
+  organism: null
+  taxid: null
+  ploidy: 2
+  ploidy_evidence: flow_cytometry
+  genome_size_bp: 1200000000
+  genome_size_basis: kmer_survey
+  mixed_sample: false
+delivery:
+  representation: primary_reference
+  phase_scope_required: false
+  parental_identity_required: false
+inputs:
+  libraries:
+    - library_id: lib_wgs_01
+      technology: illumina_wgs
+      technology_source: metadata_declared
+      library_type: wgs
+      read_files: []
+      sample_role: proband
+execution:
+  backend: sop_package
+  framework: nextflow
+  cpu_limit: 16
+  memory_gb_limit: 32
+  disk_gb_limit: 300
+  allow_remote_upload: false

@@ -1,0 +1,43 @@
+id: PIT-004
+title: 蛋白 FASTA 含内部 `.` / 内部 `*`，悄悄污染下游注释与分母
+phase: annotation
+step: 11
+commands:
+  - diamond
+  - interproscan.sh
+  - "gffread"
+severity: warning
+symptom: |
+  少量蛋白序列含内部 `.`（未知氨基酸，如基因组 N 区翻译产物）或内部 `*`。
+  数量极少时比对/注释工具可能整条拒绝、静默截断或计分异常，统计分母悄悄
+  变化而不报错。Siganus self 真实案例：37,113 条蛋白中恰有 2 条含内部点
+  （anno1.g17431.t2 第 17/21/37/93 位；anno2.427_t 第 7 位）。
+root_cause: |
+  基因组 N 区/移码区的翻译产物携带歧义字符；多数流程只移除一个末端 `*`，
+  不检查内部字符。隔离（quarantine）时不得把 `.` 解释为已确认的终止密码子，
+  也不得改写源文件。
+check:
+  language: shell
+  source: |
+    # 扫描蛋白 FASTA 内部歧义字符；未提供文件则退回需人工
+    FA="$PIT_PROT_FA"
+    if [ -z "$FA" ] || [ ! -f "$FA" ]; then
+      echo "未提供 PIT_PROT_FA（功能注释输入蛋白 FASTA 路径）——需人工确认内部 `.`/`*` 检查。"
+      exit 0
+    fi
+    bad=$(awk '
+      /^>/ { if (id != "") { s = seq; sub(/\*$/, "", s); n = gsub(/[.*]/, "&", s); if (n > 0) print id "\tinternal_ambiguity_chars=" n } ; id = substr($0, 2); seq = ""; next }
+      { seq = seq $0 }
+      END  { if (id != "") { s = seq; sub(/\*$/, "", s); n = gsub(/[.*]/, "&", s); if (n > 0) print id "\tinternal_ambiguity_chars=" n } }
+    ' "$FA")
+    if [ -n "$bad" ]; then
+      echo "缺口：蛋白 FASTA 存在内部歧义字符（内部 . 或 *），进入注释前应隔离："
+      echo "$bad" | head -20
+      exit 1
+    fi
+    echo "未检出内部 . / *（仅末端 * 视为常规终止符）。"
+    exit 0
+context_note: |
+  来源：Siganus_annotation/filter_self_invalid_proteins.py 的真实隔离逻辑
+  （只隔离已确认的 2 条，绝不改写源文件、不猜测后缀）；
+  另见结构注释记录第 8.1 节（63 个 BUSCO 导出蛋白含内部 *，口径不同须区分）。

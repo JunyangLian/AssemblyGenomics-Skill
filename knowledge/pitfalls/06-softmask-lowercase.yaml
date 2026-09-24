@@ -1,0 +1,50 @@
+id: PIT-006
+title: 传给 BRAKER 的"软屏蔽"基因组实际是硬屏蔽或未屏蔽
+phase: annotation
+step: 10
+commands:
+  - RepeatMasker
+  - braker.pl
+  - "--softmasking"
+severity: critical
+symptom: |
+  BRAKER `--softmasking` 正常运行、无报错，但输入 FASTA 的屏蔽方式错了：
+  硬屏蔽（重复区变 N，碱基不可逆丢失）或完全未屏蔽。注释"成功完成"，
+  模型质量却受损，且硬屏蔽的损失无法事后恢复。
+  Siganus 真实案例：排查之初就怀疑误用硬屏蔽，靠 lowercase 统计核验
+  （11.98% 小写碱基、N 仅 0.006%）才排除疑点。
+root_cause: |
+  RepeatMasker 不加 `-xsmall` 时输出为硬屏蔽；或流程链条中拿错文件
+  （.masked 与 .softmasked 并存时极易混淆）。"`-s` 是敏感模式不是软屏蔽
+  开关"这类参数误解也源于此。下游任何环节都不会替你检查输入屏蔽方式。
+check:
+  language: shell
+  source: |
+    # 核验"软屏蔽"FASTA 的小写比例与 N 比例；未提供文件则退回需人工
+    FA="$PIT_SM_FA"
+    if [ -z "$FA" ] || [ ! -f "$FA" ]; then
+      echo "未提供 PIT_SM_FA（传给 BRAKER 的 softmasked FASTA 路径）——需人工统计 lowercase/N 比例核验。"
+      exit 0
+    fi
+    awk '
+      /^>/ { next }
+      {
+        gsub(/[[:space:]]/, "")
+        total += length($0)
+        lower += gsub(/[acgt]/, "&")
+        ns += gsub(/[Nn]/, "&")
+      }
+      END {
+        if (total == 0) { print "文件无可统计序列——需人工检查。"; exit }
+        printf "total=%d lowercase=%.3f%% N=%.3f%%\n", total, 100*lower/total, 100*ns/total
+        if (lower / total < 0.005)
+          printf "缺口：小写碱基接近 0%%——所谓软屏蔽 FASTA 未含软屏蔽，疑似未屏蔽或已被硬屏蔽；BRAKER --softmasking 将拿不到重复信息。\n"
+        else if (ns / total > 0.2)
+          printf "缺口：N 比例异常高（%.1f%%）——疑似硬屏蔽产物混入，重复区碱基已丢失。\n", 100*ns/total
+      }
+    ' "$FA"
+    exit 0
+context_note: |
+  来源：Siganus_self 结构注释真实记录第 4.3 节（含复核 awk 命令与 512,514,567 bp /
+  11.98% 实测值）。流水线版的落地即 three_assemblies 的 mask_qc.json：
+  ID/长度/忽略大小写 SHA256 一致 + 必须含小写 ACGT，否则停止。

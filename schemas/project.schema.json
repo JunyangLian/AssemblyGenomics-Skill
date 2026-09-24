@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://genomeassembly.copilot/schemas/project.schema.json",
+  "title": "GenomeAssembly Copilot 项目配置",
+  "description": "正式运行前必须满足的 schema 声明。用于校验枚举、路径、单位、样本角色与不兼容组合，而非只是判 YAML 能否解析。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "project_id", "sample", "delivery", "execution"],
+  "properties": {
+    "schema_version": { "const": 1, "description": "当前固定为 1" },
+    "project_id": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string", "description": "持久化运行标识，未提供时校验器生成" },
+    "sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "organism": { "type": ["string", "null"] },
+        "taxid": { "type": ["integer", "null"] },
+        "ploidy": { "type": ["integer", "null"], "minimum": 1 },
+        "ploidy_evidence": { "type": ["string", "null"] },
+        "genome_size_bp": { "type": ["integer", "null"], "exclusiveMinimum": 0 },
+        "genome_size_basis": { "type": ["string", "null"] },
+        "sex": { "type": ["string", "null"] },
+        "tissue": { "type": ["string", "null"] },
+        "mixed_sample": { "type": "boolean", "default": false }
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "representation": {
+          "type": "string",
+          "enum": ["primary_reference", "primary_alternate", "selected_phased_haplotype", "all_phased_haplotypes", "subgenome_resolved", "unresolved"]
+        },
+        "phase_scope_required": { "type": "boolean", "default": false },
+        "parental_identity_required": { "type": "boolean", "default": false },
+        "organelle_policy": { "type": "string", "enum": ["review_and_separate", "none"], "default": "review_and_separate" }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "libraries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["library_id"],
+            "properties": {
+              "library_id": { "type": "string", "minLength": 1 },
+              "technology": {
+                "type": ["string", "null"],
+                "enum": ["illumina_wgs", "illumina_hiseq_hic", "ont", "hifi", null]
+              },
+              "technology_source": { "type": "string", "description": "技术类型的元数据依据，不能只靠文件名" },
+              "library_type": { "type": ["string", "null"], "enum": ["wgs", "hic", "rna_seq", null] },
+              "read_files": { "type": "array", "items": { "type": "string" } },
+              "batch": { "type": ["string", "null"] },
+              "read_quality": { "type": ["string", "null"] },
+              "sample_role": { "type": ["string", "null"], "enum": ["proband", "parent", "other", null] }
+            }
+          }
+        },
+        "existing_assembly": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "path": { "type": "string" },
+            "version": { "type": ["string", "null"] },
+            "origin": { "type": ["string", "null"] },
+            "hash": { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backend"],
+      "properties": {
+        "backend": { "type": "string", "enum": ["sop_package", "remote_agent"] },
+        "framework": { "type": "string", "enum": ["nextflow"], "default": "nextflow" },
+        "scheduler": { "type": ["string", "null"], "enum": ["slurm", "sge", "pbs", "none", null] },
+        "cpu_limit": { "type": ["integer", "null"], "exclusiveMinimum": 0 },
+        "memory_gb_limit": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "disk_gb_limit": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "allow_remote_upload": { "type": "boolean", "const": false, "default": false },
+        "tool_versions": { "type": ["object", "null"] }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "require_plan_approval": { "type": "boolean", "default": true },
+        "require_sequence_edit_approval": { "type": "boolean", "default": true },
+        "require_hic_review": { "type": "boolean", "default": true },
+        "require_release_approval": { "type": "boolean", "default": true }
+      }
+    },
+    "baselines": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "结果合理性对照的锚点：intake 阶段确定数据来源时一并选定（最近已发表同类），而非事后补",
+      "properties": {
+        "status": { "type": "string", "enum": ["selected", "not_selected"], "description": "未选定时不阻断路由，但最终报告必须如实标注'仅类群兜底带对照'" },
+        "references": {
+          "type": "array",
+          "description": "intake 时选定的可比参考文献/数据集；accession 或 doi 必填其一（防凭记忆编造）",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "accession_or_doi"],
+            "properties": {
+              "kind": { "type": "string", "enum": ["published_genome_annotation", "published_assembly", "genome_size_record", "congener_annotation", "other"] },
+              "organism": { "type": ["string", "null"] },
+              "accession_or_doi": { "type": "string", "minLength": 1 },
+              "url": { "type": ["string", "null"] },
+              "why": { "type": ["string", "null"], "description": "为何选它作锚（同种/同属/同纲…）" }
+            }
+          }
+        },
+        "metric_overrides": {
+          "type": "array",
+          "description": "由上述 references 支撑的指标参考带；优先于全局类群兜底带",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["metric", "expected_range", "based_on"],
+            "properties": {
+              "metric": { "type": "string", "minLength": 1 },
+              "taxon_scope": { "type": ["string", "null"], "description": "null 表示不限类群" },
+              "unit": { "type": ["string", "null"] },
+              "expected_range": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+              "enforce": { "type": "boolean", "default": false },
+              "based_on": { "type": "string", "description": "支撑该范围的 reference（id/说明）" },
+              "notes": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

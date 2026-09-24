@@ -1,0 +1,18 @@
+# Blocking fixture: missing required resource limits.
+schema_version: 1
+project_id: test_no_resources
+sample:
+  id: test_sample
+  mixed_sample: false
+delivery:
+  representation: primary_reference
+inputs:
+  libraries:
+    - library_id: lib_wgs_01
+      technology: illumina_wgs
+      sample_role: proband
+execution:
+  backend: sop_package
+  cpu_limit: 16
+  # memory_gb_limit and disk_gb_limit omitted -> blocked
+  allow_remote_upload: false
