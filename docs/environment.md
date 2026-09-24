@@ -23,7 +23,7 @@
 
 - **调度器：SGE**（`qsub-sge.pl --queue bc.q`，`--resource "num_proc=..,vf=..G -binding linear:.."`）。**非 SLURM**——此前 use-case 默认写 SLURM，已修正。
 - **用户**：`USER`，组 `GROUP`。参考主代码位于 `${HOME}/Grape/02.HIC/New_Template/`。
-- **数据根**：`${DATA}/F24A040009496_Grape/` 与 `${HOME}/Grape/F24A040009496.putao/`（含原始 HIC 读段 `SM-4_hic_all_1/2.fq.gz`）。
+- **数据根**：`${DATA}/Grape-001/` 与 `${HOME}/Grape/Grape-001.putao/`（含原始 HIC 读段 `SM-4_hic_all_1/2.fq.gz`）。
 - **真实资源硬编码（可作参考，非预算承诺）**：
   - bwa mem 比对：`num_proc=32, vf=54G, linear:32`
   - 3d-dna：`num_proc=20, vf=25G, linear:20`

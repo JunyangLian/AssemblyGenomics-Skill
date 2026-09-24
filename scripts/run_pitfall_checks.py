@@ -163,6 +163,7 @@ def _cli() -> int:
             print(f"  [{state:>6}] {r['id']} {r['title']} (severity={r['severity']}, engine={r.get('engine')})")
             if r.get("gap"):
                 print(f"           ↓ 检测到缺口，probe 输出: {r['probe_output']}")
+        print("  —— 图例：OK=检查未宣告缺口（含环境不可探测时不误报）；GAP=明确宣告缺口；需人工=无自动检查或环境不可用")
     return 0
 
 

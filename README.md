@@ -30,8 +30,8 @@
 本技能包面向 **Codex CLI**（默认格式）：包内含 `AGENTS.md`（每次会话自动携带的方法论与硬约束）+
 `commands/assembly-genomics.md`（按需触发的 slash 命令）+ 全部资产（scripts/knowledge/references…）。
 
-1. **获取包**：克隆仓库（`git clone https://github.com/JunyangLian/AssemblyGenomics-Skill.git`）
-   或下载 Release 的 `assembly-genomics-<ver>.zip`；
+1. **获取包**：克隆仓库（`git clone https://github.com/JunyangLian/AssemblyGenomics-Skill.git`），
+   在仓库根运行 `python scripts/package_skill.py` 生成 `dist/assembly-genomics-<ver>.zip`（dist/ 不入库）；
 2. **安装**（PowerShell / bash 均可）：
 
    ```powershell
@@ -49,7 +49,7 @@
 `<name>/SKILL.md` 形态包，放到 `~/.zcode/skills/` 或 `~/.agents/skills/`。
 
 > 本仓库同时是**开发仓库**（tests/、docs/ 全量）与 **skill 安装源**；`dist/` 下的 zip
-> 是免开发依赖的安装包。实机路径已脱敏，settings 以 `templates/settings/` 为准。
+> 由 `package_skill.py` 本地生成（不入库；仓库未发布 Release zip）。实机路径已脱敏，settings 以 `templates/settings/` 为准。
 
 ## 快速开始
 
@@ -57,7 +57,7 @@
 # 依赖：Python ≥3.9 + jsonschema + PyYAML + pytest
 python -m pytest -q                    # 117 tests，全绿
 python scripts/skill_coach.py SM_WGS_1.fq.gz SM_WGS_2.fq.gz SM_hic_all_1.fq.gz SM_hic_all_2.fq.gz
-python scripts/check_baselines.py --project project.yaml protein_coding_gene_count=23864
+python scripts/check_baselines.py --taxon actinopterygii protein_coding_gene_count=23864
 python scripts/run_pitfall_checks.py
 ```
 
@@ -90,4 +90,4 @@ tests/                      # 117 tests
 
 ## License
 
-MIT License（Copyright (c) 2026 25jylian）· Hosted on GitHub：<https://github.com/JunyangLian/assembly-genomics>
+MIT License（Copyright (c) 2026 25jylian）· Hosted on GitHub：<https://github.com/JunyangLian/AssemblyGenomics-Skill>

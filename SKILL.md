@@ -66,9 +66,9 @@ skill 本地生成 SOP 包 → 用户在服务器自行运行 → 回传 logs/�
 - `docs/use-case-001.md` — 冻结首例（葡萄三倍体）：真实数据形态识别教训、流程 DAG、手写 Juicer 流程还原（SGE/DpnII/`-m haploid`）
 - `docs/use-case-002-siganus-annotation.md` — **注释阶段参考实现（冻结）**：结构注释（BRAKER3+TSEBRA+AGAT+BUSCO）与功能注释（DIAMOND×5+InterProScan）真实跑通的 SOP、参数、QC 与检查点；生成注释 SOP 前必读
 - `docs/capability_matrix.md` — 能力等级（引用前先看，不得夸大）
-- `knowledge/pitfalls/README.md` — 陷阱库条目格式与索引（PIT-001~006 均为真实踩坑且经真实数据校准）；新坑按此追加
+- `knowledge/pitfalls/README.md` — 陷阱库条目格式与索引（PIT-001~009 均为真实踩坑，其中 001~006 另经真实数据校准）；新坑按此追加
 - `knowledge/baselines/README.md` — 文献基线条目格式与指标名；结果合理性对照的扩充流程（升 enforce 须 ≥2 篇 doi）
-- `docs/decisions.md` — 全部关键决策（D-001~D-012）
+- `docs/decisions.md` — 全部关键决策（当前至 D-023，按时间追加）
 
 ## 能力现状（如实声明，引用时不得升级）
 

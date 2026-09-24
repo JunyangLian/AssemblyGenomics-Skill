@@ -458,7 +458,7 @@ GO 分类使用各根节点的直接子项，沿 `is_a` 和 `part_of` 传播；�
 查找服务器已有文件：
 
 ```bash
-find ${SHARED}/ann /mnt/Database/DNA_Database -maxdepth 8 -type f \
+find ${SHARED}/ann ${DB2} -maxdepth 8 -type f \
   \( -name 'go-basic.obo' -o -name 'go.obo' \) -print 2>/dev/null
 ```
 

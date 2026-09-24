@@ -3,7 +3,7 @@
 > 状态：**frozen（已冻结）**，2026-09-22 依据用户提供的真实全流程记录与 pipeline 代码整理。
 > 定位：D-010 定下"注释（结构+功能）是 skill 首试接管目标"后，本用例提供**已在真实服务器完整跑通**的注释 SOP 基线。skill 生成的注释 SOP 以此为参考实现；陷阱库 PIT-002~006 的种子全部来自本用例。
 > 物种：**黄斑蓝子鱼（Siganus canaliculatus / rabbitfish）**，染色体级基因组，服务于植食性泛基因组研究（三套组装：GCA048 / Nanhai / Zhuhai；功能注释在 Qatar 组装上完成）。
-> 原始记录（逐命令级，存于 `docs/case-siganus/`）：结构注释 `Siganus_self_Structural_Annotation_Record.md`、功能注释 `Qatar_功能注释全流程记录.md` 与 `README_功能注释流程.md`、预检修复 `PREFLIGHT_FIX.md`。可运行 pipeline 代码在用户工作区 `D:\1_yanjiusheng\Siganus_self\{three_assemblies,annotation_qc}\`（磁盘版含 v3 修复，见下"已知问题"）。
+> 原始记录（逐命令级，存于 `docs/case-siganus/`）：结构注释 `Siganus_self_Structural_Annotation_Record.md`、功能注释 `Qatar_功能注释全流程记录.md` 与 `README_功能注释流程.md`、预检修复 `PREFLIGHT_FIX.md`。可运行 pipeline 代码存于作者本地工作区（不在本仓库；磁盘版含 v3 修复，见下"已知问题"）；公开仓库中的同形态等价实现见 `sop/yeast_loop/`（酵母环毕业包，阶段化 Python 驱动）。
 
 ## 一、执行事实与边界（先读这个）
 

@@ -633,10 +633,10 @@ Missing                    67
 
 服务器脚本：`$ROOT/export_coding_gff3.py`，最终成功版本标记 `streaming-v2`。
 
-本地维护副本：
+本地维护副本（实机盘符不入库，以 `<本地工作区>` 代指）：
 
-- `D:/1_yanjiusheng/Siganus_self/annotation_qc/export_coding_gff3.py`
-- `D:/1_yanjiusheng/Siganus_self/annotation_qc/test_export_coding_gff3.py`
+- `<本地工作区>/Siganus_self/annotation_qc/export_coding_gff3.py`
+- `<本地工作区>/Siganus_self/annotation_qc/test_export_coding_gff3.py`
 
 脚本按 `ID/Parent` 解析，保留 CDS 关联转录本、其 gene 以及相关 exon/CDS/intron/start/stop 记录；共享子特征只移除已排除的 Parent 引用。它不会按行号或名称前缀任意去重，不重写保留的基因组坐标、phase 或 ID。
 

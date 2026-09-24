@@ -2,12 +2,12 @@
 
 记录每条能力路线的验证等级。等级定义：planned（仅设计）/ implemented_unverified（已实现未验证）/ smoke_tested（小样本验证链路）/ case_validated（真实案例验证）/ unsupported（不支持）。
 
-当前状态：**M1 配置/状态/审核/报告测试通过（当前全量 96 passed）+ 冻结流程 #001 的 preflight 与 adapter 通道契约 + 注释阶段参考实现冻结（use-case-002，Siganus 真实 SOP）**。无 skill 执行的真实组装/注释。组装相关路线仍为 planned；注释路线的 **SOP 基线是真实跑通的（人工），skill 接管执行仍 planned**，两者分开记录。
+当前状态（2026-09-24，D-023）：全量回归 **117 passed**。注释全流程（重复 → RNA → 结构 → 功能）经 skill 生成的 SOP 在酵母机制环（use-case-003）**端到端跑通并逐段回传校验**，毕业包沉淀于 `sop/yeast_loop/`；Siganus 注释（use-case-002）为人工跑通的参考实现。**从原始读段组装仍未验证**（组装路线保持 planned；酵母环输入为已发表组装）。人工跑通与 skill 闭环分档记录，不混写。
 
 | 路线 | 输入 | 验证等级 | 说明 |
 |---|---|---|---|
-| SOP 包生成（backend A） | 元数据 + 目标 | implemented_unverified | M1 已实现 schema/校验/路由/状态/审核；preflight 已针对 #001 实现；注释参考 SOP 基线已冻结（use-case-002） |
-| 远程直连（backend B） | 见 references/remote-execution.md | unsupported（仅文档） | 本阶段仅定义接口契约与安全策略 |
+| SOP 包生成（backend A） | 元数据 + 目标 | **case_validated（酵母环四段实证）** | 机制层（intake/preflight/SOP/回传校验/基线/陷阱库）在真实数据全链路验证（D-023）；换物种复用见 `sop/yeast_loop/` 毕业包 |
+| 远程直连（backend B） | — | unsupported | D-005 保留方向：接口契约与安全策略文档未落盘（计划未执行），实时执行延后 |
 | Juicer + 3D-DNA + Juicebox（冻结 #001） | Hi-C + draft FASTA | planned | adapter 通道契约已定，真实执行待服务器 |
 | YaHS + JBAT | Hi-C + contigs | planned | 未安装验证 |
 | 纯二代 WGS 真核组装 | 二代双端 | under_frozen_flow | 冻结流程 #001 明确为短读+Hi-C，多倍体情况需证据 |

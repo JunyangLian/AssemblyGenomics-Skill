@@ -52,7 +52,7 @@ M1 全部测试通过（当前全量回归 **96 passed**，含后续补充的 pr
 
 ## 冻结流程 #001：preflight + adapter 通道契约（本阶段补充）
 
-- **用例**：`docs/use-case-001.md`（真实数据 F24A040009496_Grape，grape 三倍体，短读+Hi-C，复现+完整交付）。
+- **用例**：`docs/use-case-001.md`（真实数据 Grape-001，grape 三倍体，短读+Hi-C，复现+完整交付）。
 - **新增测试**：`preflight.py`（+8）+ `smoke_adapter.py`（+5）= **79 passed 全量**。
 - **新增产物**：`scripts/preflight.py`（服务器环境预检）、`workflows/adapters/juicer_3ddna/{adapter.nf,versions.json}`（通道契约+版本锁+人工门控声明）、`pytest.ini`（注册 smoke marker）、`use-case-001.md` 第六节流程 DAG、`technology_registry.md` 冻结软件表。
 
@@ -123,3 +123,14 @@ M1 全部测试通过（当前全量回归 **96 passed**，含后续补充的 pr
 **结论**：陷阱库探测器从"合成测试通过"升级为"**真实数据校准通过**"（阳性命中 + 阴性不误报）。仍不覆盖：其他物种/其他 pipeline 产物上的表现（PIT-005 的 1.05 阈值在含大量 ncRNA 的注释上可能误报，待更多真实案例收紧）。
 
 **过程记录**：会话中发给用户的 PIT-005 单行 awk 曾丢失右括号导致服务器语法错误（仓库 YAML 版本本身正确）；已记入 error_log.md，教训：给用户的命令必须从已测试源提取，不得手打改写。
+
+---
+
+## 酵母机制环端到端验证（2026-09-23~24，use-case-003，D-023）
+
+本报告正文的 M1 结论（96 passed、真实案例未做）写于 2026-09-21，其后以分段补充推进；**当前状态以本节与 `capability_matrix.md` 为准**。
+
+- **验证类型首次升级到真实案例层**：skill 生成的四段 SOP（重复注释 → RNA 比对 → 结构注释 → 功能注释）在真实服务器执行并逐段回传校验，四段全部通过，毕业包沉淀于 `sop/yeast_loop/`。
+- **关键结果**：软屏蔽 6.333%（mask_qc PASS）；HISAT2 比对率 70.96% / 79.94%；结构注释 5,384 基因 / BUSCO 99.0%（TSEBRA 单外显子过滤被基线首次真实拦截，单因素对照定位，PIT-009）；功能注释 Any-Annotated 99.96%。
+- **全量回归：117 passed**（较正文 96 新增：基线双层与 enforce 门槛、preflight 注释工具、多 proband 规则修正等）。
+- **仍不证明**：从原始读段组装（酵母环输入为已发表组装）、多倍体/分相交付、长读路线；ETP 蛋白环因 GeneMark-ETP git 版缺陷降级 ET 模式，如实记录。

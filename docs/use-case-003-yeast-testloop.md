@@ -1,6 +1,6 @@
 # 用例 #003：酵母机制闭环（skill 循环的首次真实测试床）
 
-> 状态：**intake 完成待执行**（数据就位、锚点冻结、SOP 未生成）。
+> 状态：**已完成：四段全通过、毕业包达成**（2026-09-24，D-023；证据见 §十、§十二、§十三、§十四）。
 > 定位：skill 循环（intake → preflight → SOP 生成 → 服务器执行 → 回传校验 → 报告）的首次真实测试。选 S. cerevisiae S288C 是为了**用最小算力验证机制**（D-017 网络策略后的首个项目）。
 > 诚实边界：本用例证明的是**循环机制**，不是多倍体作物路线——grape #001 的注释接管仍是真实案例层，在本循环验证有效后进行。
 
@@ -60,13 +60,13 @@ gene/CDS/protein 三者的精确对应关系待 SOP intake 时用 feature_table 
 
 ## 七、待办
 
-- [ ] RNA-seq run 选定（候选贴回核对）+ 下载（D-017：CNGB 镜像先行）
-- [ ] BUSCO 谱系下载（saccharomycetes_odb10）
+- [x] RNA-seq run 选定（SRR40431829/28，§十一）+ 下载（S3 通道 + 本地中转，§十一）
+- [x] BUSCO 谱系下载（saccharomycetes_odb10；段 3 实跑 n=2137 佐证）
 - [x] 服务器实测：genome_size（12,157,105）、median protein length（397）
-- [ ] 本机（USER@server）preflight 工具链盘点 → 决定补装清单或换机
-- [ ] 锚点自跑 BUSCO（依赖 busco 定位；校准 [95,100] 带并验证谱系安装）
-- [ ] D-017 决策确认（SOP 形态：阶段化 Python 驱动 vs Nextflow）
-- [ ] 段 B preflight → 段 C SOP 段 1（重复注释）
+- [x] 本机（USER@server）preflight 工具链盘点（§八，四轮核验收口）
+- [ ] 锚点自跑 BUSCO（校准 [95,100] 带）——开放项，未执行
+- [x] D-017 决策确认（SOP 形态定为阶段化 Python 驱动，D-020）
+- [x] 段 B preflight → 段 C SOP 段 1（重复注释）（§八、§十）
 
 ## 八、段 B preflight 结果（2026-09-22，本机 USER@server 实测盘点）
 
@@ -119,7 +119,7 @@ gene/CDS/protein 三者的精确对应关系待 SOP intake 时用 feature_table 
 
 - **Dfam 3.9 确认可用**（famdb.py 用 env 自带 python 跑通；Dfam 39 h5 + RepeatMasker 4.2.2 + RMBlast = 重复注释栈就绪）。
 - **TEflow 的 busco 实测 6.1.0 可用**。
-- **关键发现：全新 busco5 env（TUNA 镜像装成）直调 wrapper 仍报 `No module named 'busco'`**——三个不同 env 同错，指向**调用方式**而非包损坏：noarch python 入口脚本的 shebang 解析到 base python（/program/anaconda3，无 busco 模块）。修复假设：用 env 自己的 python 显式调用。**SOP 生成新规则：conda python 类工具一律 `env_python + 脚本绝对路径` 调用，不直接执行 wrapper**（待第五轮验证后固化）。
+- **关键发现：全新 busco5 env（TUNA 镜像装成）直调 wrapper 仍报 `No module named 'busco'`**——三个不同 env 同错，指向**调用方式**而非包损坏：noarch python 入口脚本的 shebang 解析到 base python（base 壳 anaconda 根，实机路径已脱敏；无 busco 模块）。修复假设：用 env 自己的 python 显式调用。**SOP 生成新规则：conda python 类工具一律 `env_python + 脚本绝对路径` 调用，不直接执行 wrapper**（待第五轮验证后固化）。
 
 ## 九、段 B 收口：SOP settings 冻结（2026-09-22，全部实测）
 

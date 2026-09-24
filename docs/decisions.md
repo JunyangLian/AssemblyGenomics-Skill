@@ -27,7 +27,7 @@
 ### D-005 产品定位与执行模型
 - 决策：一个 Skill，两个执行 backend（A 生成 SOP 包 / B 远程直连），先 A 后 B；保留在"LLM 自适应组装 + 强制人类审核门控"空白上做首版。
 - 理由：`docs/competitive-analysis.md` 确认该组合无成熟竞品；合并架构复用共享地基，串行节奏先做透 A。
-- 影响：backend 选项由后端契约承载；`references/remote-execution.md` 定义 B 的安全策略（本轮只落文档）。
+- 影响：backend 选项由后端契约承载；`references/remote-execution.md` 定义 B 的安全策略（本轮只落文档）。【2026-09-24 审计修正：该文档实际未落盘，B 维持无文档、无实现的 unsupported 状态（见 capability_matrix）】
 
 ### D-006 首版验收基线
 - 决策：首版验收以"至少一条真实路线从原始读段走到报告 + Juicebox 人工审核不能绕过"为准，先做透 SOP 版。
@@ -40,7 +40,7 @@
 - 影响：进入 M2 的方向是真实组装适配器（Juicer/3D-DNA 与 YaHS 两路）与 `preflight.py`；组装相关路线能力等级仍为 planned，未升级。
 
 ### D-008 冻结真实首用例 #001
-- 决策：以真实数据 `F24A040009496_Grape`（grape 三倍体、短读+Hi-C、复现已有结果、完整交付）作为首个冻结用例。
+- 决策：以真实数据 `Grape-001`（grape 三倍体、短读+Hi-C、复现已有结果、完整交付）作为首个冻结用例。【公开仓库中项目编号已脱敏为 Grape-001】
 - 理由：数据清单证实短读+Hi-C、无长读；历史产物命名指向 Juicer+3D-DNA 主干。
 - 影响：preflight 与 adapter 契约据此冻结（79 测试）。【流程细节初版含 SOAPdenovo2，随后被 D-009 据真实脚本修正】
 
@@ -125,3 +125,8 @@
 - 决策：use-case-003 四段（重复注释 → RNA 比对 → 结构注释 → 功能注释）全部通过回传校验；`sop/yeast_loop/` 成为首个毕业包（可复用 SOP + 冻结 settings + 检查点 + 基线锚点）。
 - 理由：机制层（intake/preflight/SOP/回传校验/基线/陷阱库）在真实数据上全链路验证；PIT-008/009 与 GO 多值解析等真实缺陷转化为 driver 防线与陷阱条目。
 - 影响：capability_matrix 注释/功能两行升 case_validated（skill 排程）；Any-Annotated 基线 [80,99]→[95,100]（观测校准）；结构注释边界如实记录（ET 模式、单倍体酵母）。
+
+### D-024 发布前审计修复：文档事实矛盾与敏感信息清零
+- 决策：公开仓库全量审计后修复 12 项问题。事实矛盾 3 项：陷阱库 README 判定语义与 `_decide_gap` 实现相反（改为关键词宣告约定）、use-case-003 状态头/待办停在 intake 期、capability_matrix 头部停在 M1；敏感信息：项目编号脱敏为 Grape-001、实机绝对路径占位化（/home、/mnt、/program、本地盘符）、删除含真实 conda 路径的 run_stage3.py.bak（.gitignore 补 *.bak）；发布口径：README 安装改"clone 后自行打包"（无 Release、dist 不入库）、快速开始 check_baselines 命令实测修复、License 链接修正；validation_report 补酵母环验证节；backend B 悬空引用如实标注"文档未落盘"；SOP 包生成行按 D-023 理由升 case_validated（酵母环四段实证）。
+- 理由：本项目核心即捕获"能跑通但不完整"——审计发现文档层存在同类静默缺口（状态头/验收报告停在旧版本、README 脱敏声明与公开内容不符），与运行层 silent gap 同源。
+- 影响：新纪律——**每落一条 D-决策须同步刷新受影响文档的状态头与计数**（文档层无 run_registry，靠此防漂移）；git 历史中旧内容保留（敏感度低，不重写历史；如需彻底清除另行评估 force-push）；回归 117 passed，快速开始命令全部实测通过。

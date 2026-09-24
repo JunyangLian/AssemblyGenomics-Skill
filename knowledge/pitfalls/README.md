@@ -25,11 +25,18 @@ symptom: >            # 「看起来成功了但…」描述
   RepeatMasker 跑通了，但因为只下到 dfam0 旧库，屏蔽少了很多。
 root_cause: >         # 为什么会出现且不报错
   运行前只下载了 Dfam 0.x 版库，未同步最新 Dfam 数据库。
-check:                # 一段可执行脚本（shell），返回非零或无输出则判定为缺口
+check:                # 可执行探测脚本；判定语义：只有输出含"缺口"或"GAP"关键词才判为缺口
   language: shell
   source: |
-    echo "检测 Dfam 库版本…示例占位"
+    found=$(ls -1 "$PIT_DB_DIR"/Dfam_*.embl 2>/dev/null | head -1)
+    if [ -z "$found" ]; then
+      echo "缺口：未找到 Dfam 库文件（$PIT_DB_DIR）"
+      exit 1
+    fi
+    echo "检测到 Dfam 库: $found"
 ```
+
+**判定语义（与 `_decide_gap` 实现一致）**：探测脚本**输出含「缺口」或「GAP」关键词**才判为缺口；退出码不参与判定——非零退出但未宣告缺口（环境不支持/执行失败）→「需人工」，不误报。无 `check` 或 `source` 为空的条目同样标「需人工」。
 
 ## 已收录
 
@@ -45,4 +52,4 @@ check:                # 一段可执行脚本（shell），返回非零或无输
 | PIT-008 | BRAKER 输入 FASTA 头含描述 → ETP 参考名与 BAM 不匹配，GeneMark 失败且提示误导 | Siganus GCA048（v3 HEADER_FIX）+ 酵母 2026-09-23 两度实跑 |
 | PIT-009 | TSEBRA 单外显子过滤器是物种内含子含量依赖的——内含子贫乏物种上滤掉 ~95% 真基因（酵母 221 vs 5384，BUSCO 3.1% vs 99.0%） | 酵母 2026-09-24 单因素对照实证 |
 
-PIT-001~006 来自 Siganus 真实注释全流程（见 `docs/use-case-002-siganus-annotation.md` 与 `docs/case-siganus/` 原始记录）；PIT-007 为服务器礼仪类（跨阶段，phase=general）。后续条目按需追加——可信度来自真实种子，不预先堆投机条目。
+PIT-001~006 来自 Siganus 真实注释全流程（见 `docs/use-case-002-siganus-annotation.md` 与 `docs/case-siganus/` 原始记录）；PIT-007 为服务器礼仪类（跨阶段，phase=general）；PIT-008/009 来自酵母机制环实跑（见 `docs/use-case-003-yeast-testloop.md`）。后续条目按需追加——可信度来自真实种子，不预先堆投机条目。

@@ -8,3 +8,4 @@ _archive*/
 *.nohup.log
 stage*.log
 dist/
+*.bak
