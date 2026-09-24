@@ -7,3 +7,4 @@ _archive*/
 .expected.sha256
 *.nohup.log
 stage*.log
+dist/

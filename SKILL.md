@@ -1,5 +1,5 @@
 ---
-name: genome-assembly-copilot
+name: genome-assembly-copilot-skill
 description: 基因组组装/注释自适应流程 Copilot。当用户提到基因组组装、Hi-C 挂载、scaffolding、Juicebox 调图、BUSCO 评估、单倍型/hap1/hap2、purge_dups、污染或细胞器分离、重复屏蔽、结构/功能注释（MAKER/InterProScan/eggnog）、或有 fastq/fasta/gfa/bam 测序数据想组装、评估、注释时使用——即使用户没有明确说"组装"或"skill"。核心价值：LLM 自适应路线 + 代码层硬约束 + 强制人类审核门控 + 静默缺口（silent gap）检测。
 ---
 
