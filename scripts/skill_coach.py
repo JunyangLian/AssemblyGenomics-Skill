@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -24,131 +25,168 @@ from scripts import plan as plan_mod  # noqa: E402
 from scripts.run_pitfall_checks import PITFALLS_DIR, _load_entries  # noqa: E402
 
 # --- 数据识别（从文件名判断"有哪些数据"）------------------------------------
+#
+# 识别语义（D-025）：
+# - BAM 不视作组装源（references/scope-and-routing.md），归 bam 类并提示人工明确用途
+# - 无法识别文库类型的 FASTQ 归 unknown_reads：不得默认当作 WGS，须用户显式确认（--assume-wgs）
+# - hiseq 是测序平台名，不作为 Hi-C 关键词；关键词一律按分隔符边界匹配，防子串误报
+# - 文件名推断（如 hap1/hap2 → 单倍型交付）只产生 hint，不代替显式声明
 
-# (分类, 触发关键字、扩展名判定)
 FASTA_EXT = (".fa", ".fas", ".fasta", ".fna", ".fa.gz", ".fasta.gz")
 READ_EXT = (".fq", ".fastq", ".fq.gz", ".fastq.gz")
 
+_HIC_RE = re.compile(r"(?:^|[_.\-])hi[-_]?c(?:[_.\-]|$)")
+_RNA_RE = re.compile(r"(?:^|[_.\-])rna(?:[_.\-]|$)|transcri")
+_WGS_RE = re.compile(r"(?:^|[_.\-])(?:wgs|whole[-_]?genome)(?:[_.\-]|$)")
+_HAP_RE = re.compile(
+    r"(?:^|[_.\-])(?:hap[_.\-]?[12]|phased|phase[_.\-]?separated|subgenome|diploid|triploid)(?:[_.\-]|$)"
+)
 
-class _Ctx:
-    def __init__(self, name: str):
-        self.n = (name or "").lower()
-        self.ext = ""
-        for e in FASTA_EXT + READ_EXT:
-            if self.n.endswith(e):
-                self.ext = e
-                self.base = self.n[: -len(e)]
-                break
-        else:
-            self.base = self.n
-        self._hic = self._kw(("hic", "hiseq"))
-        self._rna = self._kw(("rna", "transcri"))
-        self._wgs = self._kw(("wgs", "wholegenome", "pair"))
-        self._hap = self._kw(("hap1", "hap2", "hap_1", "hap_2"))
-        self._phased = self._kw(("phased", "phase", "subgenome", "dip", "tri"))
-
-    def _kw(self, toks: tuple[str, ...]) -> bool:
-        return any(t in self.n for t in toks)
-
-    @property
-    def read1(self) -> bool:
-        return any(t in self.base for t in ("_r1", ".r1", "_1")) or self.base.endswith("1")
-
-    @property
-    def read2(self) -> bool:
-        return any(t in self.base for t in ("_r2", ".r2", "_2")) or self.base.endswith("2")
+# kind → discovered 键（technology 缩写）
+_KIND_TEC = (("hic_reads", "hic"), ("rna_reads", "rna_seq"), ("wgs_reads", "wgs"))
+_TEC_LABEL = {"wgs": "WGS", "hic": "Hi-C", "rna_seq": "RNA"}
 
 
 def classify_filename(name: str) -> dict:
-    """把单个文件名归类为 {kind, r1/r2, paired_possible}。kind∈{wgs_reads,hic_reads,rna_reads,assembly,other}"""
-    c = _Ctx(name)
-    is_read = c.n.endswith(READ_EXT)
-    is_fa = c.n.endswith(FASTA_EXT)
-    is_bam = c.n.endswith(".bam")
-    if is_read and c._hic:
-        return {"kind": "hic_reads", "read": "r1" if c.read1 else ("r2" if c.read2 else None)}
-    if is_read and c._rna:
-        return {"kind": "rna_reads", "read": "r1" if c.read1 else ("r2" if c.read2 else None)}
-    if is_read:
-        return {"kind": "wgs_reads", "read": "r1" if c.read1 else ("r2" if c.read2 else None)}
-    if is_fa or is_bam:
-        return {"kind": "assembly"}
-    return {"kind": "other"}
+    """把单个文件名归类为 {kind, read}。
+
+    kind ∈ {wgs_reads, hic_reads, rna_reads, unknown_reads, assembly, bam, other}
+    - unknown_reads：FASTQ 但文件名无 WGS/Hi-C/RNA 证据（如 sample_R1.fastq.gz、ATAC/ChIP 数据）——
+      不得默认当 WGS，须显式确认后才能作为组装源
+    - bam：BAM 是比对产物不是组装源，只提示人工明确用途
+    """
+    n = (name or "").lower()
+    if n.endswith(READ_EXT):
+        if _HIC_RE.search(n):
+            kind = "hic_reads"
+        elif _RNA_RE.search(n):
+            kind = "rna_reads"
+        elif _WGS_RE.search(n):
+            kind = "wgs_reads"
+        else:
+            kind = "unknown_reads"
+        return {"kind": kind, "read": plan_mod.read_tag(name)}
+    if n.endswith(FASTA_EXT):
+        return {"kind": "assembly", "read": None}
+    if n.endswith(".bam"):
+        return {"kind": "bam", "read": None}
+    return {"kind": "other", "read": None}
 
 
 def identify_data(filenames: list[str]) -> dict:
-    """汇总整个文件清单：发现了哪些数据类别、是否有成对读段、缺口提示。"""
-    seen: dict[str, int] = {}
+    """汇总整个文件清单：发现了哪些数据类别、按样本前缀的 R1/R2 配对缺口、无法识别项。"""
     by_kind: dict[str, list[str]] = {}
     for fn in filenames:
-        info = classify_filename(fn)
-        by_kind.setdefault(info["kind"], []).append(fn)
-        if info["kind"] in ("hic_reads", "rna_reads", "wgs_reads"):
-            tec = {"hic_reads": "hic", "rna_reads": "rna_seq", "wgs_reads": "wgs"}[info["kind"]]
-            seen[tec] = seen.get(tec, 0) + 1
+        by_kind.setdefault(classify_filename(fn)["kind"], []).append(fn)
+
+    discovered: dict[str, int] = {}
+    for kind, tec in _KIND_TEC:
+        files = by_kind.get(kind) or []
+        if files:
+            discovered[tec] = len(files)
 
     warnings: list[str] = []
-    # 关键判断：BAM/assembly 不等于有可组装的读段；同类型读段需成对
-    has_hic = "hic" in seen
-    has_wgs = "wgs" in seen
-    # 单倍型交付推断：装配文件名含 hap1/hap2 或 phased → 提示可能要求单倍型交付
+    # R1/R2 按样本前缀配对：A_R1 + B_R2 不算成对（旧逻辑只看"有没有出现 R1/R2"，多样本会漏判）
+    for kind, tec in _KIND_TEC:
+        files = by_kind.get(kind) or []
+        by_prefix: dict[str, set[str]] = {}
+        for f in files:
+            tag = plan_mod.read_tag(f)
+            if tag:
+                by_prefix.setdefault(plan_mod.sample_prefix(f), set()).add(tag)
+        label = _TEC_LABEL[tec]
+        for prefix in sorted(by_prefix):
+            tags = by_prefix[prefix]
+            if "r1" in tags and "r2" not in tags:
+                warnings.append(f"检测到{label}读段 [{prefix}] 只有 R1 缺 R2——双端文库不完整，无法配对")
+            elif "r2" in tags and "r1" not in tags:
+                warnings.append(f"检测到{label}读段 [{prefix}] 只有 R2 缺 R1——双端文库不完整，无法配对")
+
+    bam_files = by_kind.get("bam") or []
+    if bam_files:
+        warnings.append(
+            f"BAM 不视作组装源（{len(bam_files)} 个 .bam）：如需使用其中的比对结果，请人工明确其用途"
+        )
+
+    # 单倍型交付 hint：只作为候选提示，不代替显式声明（D-025）
     delivery_hint: str | None = None
-    for asm_fn in by_kind.get("assembly", []):
-        c = _Ctx(asm_fn)
-        if c._hap or c._phased:
+    for asm_fn in by_kind.get("assembly") or []:
+        if _HAP_RE.search(asm_fn or ""):
             delivery_hint = "phase_separated"
             break
-    for kind_key in ("wgs_reads", "hic_reads", "rna_reads"):
-        files = by_kind.get(kind_key) or []
-        completions = [(f, classify_filename(f)["read"]) for f in files]
-        r1 = any(r == "r1" for _, r in completions)
-        r2 = any(r == "r2" for _, r in completions)
-        if not (r1 and r2):
-            tec = {"wgs_reads": "WGS", "hic_reads": "Hi-C", "rna_reads": "RNA"}[kind_key]
-        if r1 and not r2:
-            warnings.append(f"检测到{tec}读段只有 R1，缺 R2——双端文库不完整，无法配对")
-        elif r2 and not r1:
-            warnings.append(f"检测到{tec}读段只有 R2，缺 R1——双端文库不完整，无法配对")
 
     return {
-        "discovered": seen,
-        "has_hic": has_hic,
+        "discovered": discovered,
+        "has_hic": "hic" in discovered,
         "has_assembly": bool(by_kind.get("assembly")),
         "by_kind": by_kind,
         "delivery_hint": delivery_hint,
         "warnings": warnings,
-        "unclassifiable": by_kind.get("other", []),
+        "unknown_reads": by_kind.get("unknown_reads") or [],
+        "unclassifiable": by_kind.get("other") or [],
     }
 
 
 # --- 由识别结果建 project dict（喂给 plan.route）-----------------------------
 
-def build_project(identified: dict, delivery_repr: str | None = "primary_reference",
-                  sample_ploidy: int | None = None) -> dict:
+def build_project(identified: dict, delivery_repr: str | None = None,
+                  sample_ploidy: int | None = None, assume_wgs: bool = False) -> dict:
+    """由识别结果建 project dict（喂给 plan.route）。
+
+    - delivery_repr 默认 None（=未声明）：交付表示必须显式给出，不默认 primary_reference（D-025）
+    - read_files 全量带入 library：路由层的 R1/R2 硬阻断依赖它（此前只在前层出 warning、
+      后层看不到原始文件，属于层间信息丢失）
+    - assume_wgs=True：用户显式确认把 unknown_reads 当 WGS（technology_source 记 user_confirmed）
+    """
+    by_kind = identified.get("by_kind") or {}
     libs: list[dict] = []
-    idx = 0
-    for tec, n in identified["discovered"].items():
-        if n and tec == "hic":
-            libs.append({"library_id": f"lib_hic{idx}", "technology": "illumina_hiseq_hic",
-                         "library_type": "hic", "sample_role": "proband"})
-            idx += 1
-        elif n and tec == "wgs":
-            libs.append({"library_id": f"lib_wgs{idx}", "technology": "illumina_wgs",
-                         "library_type": "wgs", "sample_role": "proband"})
-            idx += 1
-        elif n and tec == "rna_seq":
-            libs.append({"library_id": f"lib_rna{idx}", "technology": "illumina_wgs",
-                         "library_type": "rna_seq", "sample_role": "proband"})
-            idx += 1
+
+    wgs_files = list(by_kind.get("wgs_reads") or [])
+    unknown = list(identified.get("unknown_reads") or [])
+    if assume_wgs and unknown:
+        wgs_files += unknown
+    if wgs_files:
+        source = "user_confirmed" if (assume_wgs and unknown) else "filename_inferred"
+        libs.append({
+            "library_id": "lib_wgs",
+            "technology": "illumina_wgs",
+            "technology_source": source,
+            "library_type": "wgs",
+            "read_files": sorted(wgs_files),
+            "sample_role": "proband",
+        })
+
+    hic_files = by_kind.get("hic_reads") or []
+    if hic_files:
+        libs.append({
+            "library_id": "lib_hic",
+            "technology": "illumina_hiseq_hic",
+            "technology_source": "filename_inferred",
+            "library_type": "hic",
+            "read_files": sorted(hic_files),
+            "sample_role": "proband",
+        })
+
+    rna_files = by_kind.get("rna_reads") or []
+    if rna_files:
+        libs.append({
+            "library_id": "lib_rna",
+            "technology": "illumina_wgs",
+            "technology_source": "filename_inferred",
+            "library_type": "rna_seq",
+            "read_files": sorted(rna_files),
+            "sample_role": "proband",
+        })
+
     existing = None
-    asm_files = identified.get("by_kind", {}).get("assembly") or []
+    asm_files = by_kind.get("assembly") or []
     if asm_files:
         existing = {"path": asm_files[0], "format": "fasta",
                     "hash": None}  # hash 留空交由 plan 判定"来源完整性不可校验"
     sample: dict[str, Any] = {"id": "SAMPLE"}
     if sample_ploidy is not None:
         sample["ploidy"] = sample_ploidy
-    project: dict[str, Any] = {
+    return {
         "sample": sample,
         "input_type": "existing_assembly" if existing else "raw_reads",
         "inputs": {
@@ -157,7 +195,6 @@ def build_project(identified: dict, delivery_repr: str | None = "primary_referen
         },
         "delivery": {"representation": delivery_repr},
     }
-    return project
 
 
 # --- 每步坑位铺排（把陷阱库按 phase/step 挂到 SOP 步骤）-----------------------
@@ -187,15 +224,40 @@ SOP_STEP_TITLE = {
 }
 
 
-def run_coach(filenames: list[str], delivery_repr: str | None = "primary_reference",
-              ploidy: int | None = None) -> dict:
+def run_coach(filenames: list[str], delivery_repr: str | None = None,
+              ploidy: int | None = None, assume_wgs: bool = False) -> dict:
     identified = identify_data(filenames)
-    # 单倍型交付推断优先：若文件名含 hap 且用户未显式指定，则采纳 hap(phase_separated)
-    if identified.get("delivery_hint") and delivery_repr == "primary_reference":
-        delivery_repr = identified["delivery_hint"]
-    project = build_project(identified, delivery_repr=delivery_repr, sample_ploidy=ploidy)
+    project = build_project(identified, delivery_repr=delivery_repr,
+                            sample_ploidy=ploidy, assume_wgs=assume_wgs)
     routed = plan_mod.route(project)
     entries = _load_entries(PITFALLS_DIR)
+
+    # --- intake 层阻断：plan 看不到的原始信息在这里拦，不静默降级 ---
+    intake_blockers: list[str] = []
+    unknown = identified.get("unknown_reads") or []
+    if unknown and not assume_wgs:
+        shown = ", ".join(unknown[:3]) + ("…" if len(unknown) > 3 else "")
+        intake_blockers.append(
+            f"检测到 {len(unknown)} 个无法识别文库类型的 FASTQ（{shown}）："
+            "不得默认当作 WGS——请显式确认（--assume-wgs）或按规范命名（如 sample_WGS_R1.fq.gz）后重跑"
+        )
+
+    recommendations = list(routed["recommendations"])
+    data_warnings = list(identified["warnings"])
+    # 单倍型 hint 只提示，不代替显式声明；与显式选择冲突时警告人工核实
+    hint = identified.get("delivery_hint")
+    if hint:
+        if delivery_repr is None:
+            recommendations.append(
+                f"文件名暗示单倍型交付（{hint}）：请显式 --repr {hint} 确认后再路由，不自动采纳"
+            )
+        elif delivery_repr != hint:
+            data_warnings.append(
+                f"文件名暗示单倍型交付（{hint}），与显式指定的 {delivery_repr} 不一致——请人工核实"
+            )
+
+    blockers = list(routed["blockers"]) + intake_blockers
+    route_intent = "blocked" if intake_blockers else routed["intent"]
 
     steps: list[dict] = list(routed["steps"])
     # 注释阶段是 skill 当前接管目标：流程未含注释步时，若陷阱库有 annotation 条目，
@@ -225,13 +287,14 @@ def run_coach(filenames: list[str], delivery_repr: str | None = "primary_referen
         steps_out.append(step)
 
     return {
-        "route_intent": routed["intent"],
+        "route_intent": route_intent,
         "delivery_repr_resolved": delivery_repr,
-        "blockers": routed["blockers"],
-        "recommendations": routed["recommendations"],
+        "blockers": blockers,
+        "recommendations": recommendations,
         "has_hic": identified["has_hic"],
-        "data_warnings": identified["warnings"],
+        "data_warnings": data_warnings,
         "unclassifiable": identified["unclassifiable"],
+        "unknown_reads": identified["unknown_reads"],
         "observed_data": identified["discovered"],
         "steps": steps_out,
         "annotation_pitfall_hint": bool(annotation_entries),
@@ -241,12 +304,15 @@ def run_coach(filenames: list[str], delivery_repr: str | None = "primary_referen
 def _cli() -> int:
     p = argparse.ArgumentParser(description="新手向导：从原始文件清单生成分步 SOP + 每步坑位预警（雏形）")
     p.add_argument("files", nargs="+", help="原始文件名清单（新手把全部数据放进来）")
-    p.add_argument("--repr", default="primary_reference",
-                   help="交付表示（默认 primary_reference）")
+    p.add_argument("--repr", default=None,
+                   help="交付表示（primary_reference / phase_separated）：必须显式指定；缺省即阻断，不默认")
+    p.add_argument("--assume-wgs", action="store_true",
+                   help="显式确认：把无法识别类型的 FASTQ 当作 WGS（识别不了≠默认是，用户承担确认责任）")
     p.add_argument("--ploidy", type=int, default=None, help="倍性（默认不设，若 >2 会被 plan 阻断）")
     args = p.parse_args()
 
-    res = run_coach(args.files, delivery_repr=args.repr, ploidy=args.ploidy)
+    res = run_coach(args.files, delivery_repr=args.repr, ploidy=args.ploidy,
+                   assume_wgs=args.assume_wgs)
     print(json.dumps(res, ensure_ascii=False, indent=2))
     return 0
 

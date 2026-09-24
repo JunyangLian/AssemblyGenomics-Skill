@@ -14,7 +14,7 @@ description: 基因组组装/注释自适应流程 Copilot。当用户提到基�
 1. **交付表示必须显式声明**。`delivery.representation` 未填或为 `unresolved` 时阻断澄清，不静默假定；primary 不冒充分相结果，phased 交付需专门证据（D-003）。
 2. **人类批准二要素缺一不可**：`approval.approved_by_human=true` 且 `submission_action` 非空。LLM 不能写出"已审核"状态，也不能复用旧版 hash 的批准。
 3. **状态以磁盘结构化记录为准，不以聊天历史为准**。状态词表与迁移见 `references/qc-and-review-policy.md`。
-4. **硬阻断场景直接停**：缺 R2、错误文库类型、样本角色冲突、多倍体路径未验证、混样、只有 Hi-C 无组装源。告知用户缺什么、能做什么，而不是降级猜测。
+4. **硬阻断场景直接停**：缺 R1/R2（按样本前缀成对，A_R1+B_R2 不算）、错误文库类型、样本角色冲突、多倍体路径未验证、混样、只有 Hi-C 无组装源、无法识别文库类型的 FASTQ（unknown_reads——不得默认当 WGS，须用户显式确认）、BAM 不视作组装源。告知用户缺什么、能做什么，而不是降级猜测。
 5. **失败/缺失如实报告**。指标缺失、工具失败不得包装成正常通过；显示"未评估/不适用/执行失败"。
 6. **不臆断环境**。本机探测不到的能力（如 bash 存根不可用）标记"需人工/需服务器"，不宣称已验证。
 7. **资源预算必须显式向用户确认**（PIT-007）。线程/内存/磁盘写入 project.yaml 前先问"这台服务器你安全可用多少"——服务器可能公用或多用途，不得沿用默认值、示例命令或上一项目的预算（如 48 线程）；执行中同样不得超预算。
@@ -48,7 +48,7 @@ skill 本地生成 SOP 包 → 用户在服务器自行运行 → 回传 logs/�
 
 | 命令 | 用途 |
 |---|---|
-| `python scripts/skill_coach.py <files...> [--repr X] [--ploidy N]` | 新手入口：数据识别+路由+分步 SOP 带坑位预警 |
+| `python scripts/skill_coach.py <files...> --repr <X> [--assume-wgs] [--ploidy N]` | 新手入口：数据识别+路由+分步 SOP 带坑位预警（交付表示必须显式声明；unknown FASTQ 须 --assume-wgs 确认） |
 | `python scripts/preflight.py --data-root <dir> [--manifest m.json] [--json]` | 服务器环境预检（SGE/conda/工具版本） |
 | `python scripts/validate_project.py <project.yaml>` | 配置校验，阻断时给字段路径 |
 | `python scripts/plan.py <project.yaml>` | 路由判定；`--root <dir>` 用于失效传播 |
@@ -68,11 +68,11 @@ skill 本地生成 SOP 包 → 用户在服务器自行运行 → 回传 logs/�
 - `docs/capability_matrix.md` — 能力等级（引用前先看，不得夸大）
 - `knowledge/pitfalls/README.md` — 陷阱库条目格式与索引（PIT-001~009 均为真实踩坑，其中 001~006 另经真实数据校准）；新坑按此追加
 - `knowledge/baselines/README.md` — 文献基线条目格式与指标名；结果合理性对照的扩充流程（升 enforce 须 ≥2 篇 doi）
-- `docs/decisions.md` — 全部关键决策（当前至 D-023，按时间追加）
+- `docs/decisions.md` — 全部关键决策（当前至 D-025，按时间追加）
 
 ## 能力现状（如实声明，引用时不得升级）
 
-- 配置/模拟层：117 tests 全绿（路由、审核门槛、状态机、报告、陷阱库机制、基线对照、新手向导）。
+- 配置/模拟层：128 tests 全绿（路由、审核门槛、状态机、报告、陷阱库机制、基线对照、新手向导）。
 - **真实数据端到端（酵母机制环 use-case-003，2026-09-24）**：注释全流程四段（重复注释 → RNA 比对 → 结构注释 → 功能注释）经 skill 生成 SOP 跑通并逐段回传校验——5,384 基因 / BUSCO 99.0% / Any-Annotated 99.96%；毕业包沉淀于 `sop/yeast_loop/`。
 - 未验证（诚实边界）：从原始读段组装（葡萄 #001 计划为真实组装案例）、ETP 蛋白环（GeneMark-ETP git 版缺陷，走 ET 模式并如实记录）、多倍体/分相交付、长读路线。
 - 引用能力结论时必须声明属于哪一层（配置/模拟、真实案例）。详细等级见 `docs/capability_matrix.md`。

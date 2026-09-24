@@ -30,13 +30,14 @@
 
 ## 硬阻断清单（代码直接拦）
 
-1. `delivery.representation` 未定义或 `unresolved`——不擅自选择交付路线。
+1. `delivery.representation` 未定义或 `unresolved`——不擅自选择交付路线（skill_coach/CLI/模板均不设默认值，D-025）。
 2. 缺 `proband` 角色文库——无法确定组装主体。
 3. 文库类型不支持 / technology 与 library_type 不匹配 / 缺 library_type。
-4. 双端 illumina 文库缺 R1 或 R2（按文件名 R1/R2 存在性判断）。
+4. 双端 illumina 文库缺 R1 或 R2——按**样本前缀**成对判断（A_R1+B_R2 各自缺端，不算"R1/R2 都存在"）；无 R1/R2 标记的单端文件不触发。
 5. `sample.ploidy > 2`——多倍体组装路径未验证（冻结首例例外：走 use-case-001 的真实冻结流程，见 `docs/use-case-001.md`）。
 6. `sample.mixed_sample=true`——混样路径未验证。
 7. 只有 Hi-C 无可用组装源。
+8. 无法识别文库类型的 FASTQ（unknown_reads）——skill_coach intake 层阻断：不得默认当 WGS，须 `--assume-wgs` 显式确认或规范命名后重跑（D-025）。
 
 ## plan 时依赖要求
 

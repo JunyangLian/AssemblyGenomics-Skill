@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -35,21 +36,43 @@ def _libraries(project: dict) -> list[dict]:
     return (project.get("inputs") or {}).get("libraries") or []
 
 
+def _strip_read_ext(name: str) -> str:
+    n = Path(name).name.lower()
+    for ext in (".fastq.gz", ".fq.gz", ".fastq", ".fq"):
+        if n.endswith(ext):
+            return n[: -len(ext)]
+    return n
+
+
+def read_tag(name: str) -> str | None:
+    """文件名尾部的 R1/R2 标记（r1/1 → r1，r2/2 → r2）；无标记返回 None（单端或未知）。"""
+    base = _strip_read_ext(name)
+    m = re.search(r"(?:^|[_.\-])r?([12])$", base)
+    if not m:
+        return None
+    return "r1" if m.group(1) == "1" else "r2"
+
+
+def sample_prefix(name: str) -> str:
+    """去掉尾部 R1/R2 标记后的样本前缀（小写）。配对按前缀分组：A_R1+B_R2 不算成对。"""
+    base = _strip_read_ext(name)
+    m = re.search(r"(?:^|[_.\-])r?([12])$", base)
+    return base[: m.start()] if m else base
+
+
+def _missing_pair_prefixes(lib: dict) -> list[str]:
+    """返回缺 R1 或缺 R2 的样本前缀；空列表表示配对完整（无标记的单端文件不触发）。"""
+    by_prefix: dict[str, set[str]] = {}
+    for r in lib.get("read_files") or []:
+        tag = read_tag(r)
+        if tag:
+            by_prefix.setdefault(sample_prefix(r), set()).add(tag)
+    return sorted(p for p, tags in by_prefix.items() if not {"r1", "r2"} <= tags)
+
+
 def _same_orientation_ok(lib: dict) -> bool:
-    """双端文库须成对提供 R1/R2（缺任一即判定不可用）。"""
-    reads = lib.get("read_files") or []
-    # 只按文件名 R1/R2 存在性判断，不再依赖更细技术判定
-    for r in reads:
-        name = Path(r).name.lower()
-        if any(token in name for token in ("_r1", "_1.f", ".r1", "_r1.")):
-            paired = any(("_r2" in name) for _ in [0]) or any(
-                t in rr.lower()
-                for rr in reads
-                for t in ("_r2", "_2.f", ".r2", "_r2.")
-            )
-            if not paired:
-                return False
-    return True
+    """双端文库须按样本前缀成对提供 R1/R2（缺任一即判定不可用）。"""
+    return not _missing_pair_prefixes(lib)
 
 
 def _has_reads(project: dict) -> bool:
@@ -105,8 +128,13 @@ def route(project: dict) -> dict:
             )
         elif tech and not ltype:
             blockers.append(f"inputs.libraries[{lib.get('library_id')}]: technology={tech} 但缺 library_type")
-        if lib.get("technology") == "illumina_wgs" and not _same_orientation_ok(lib):
-            blockers.append(f"inputs.libraries[{lib.get('library_id')}]: 双端文库缺 R1 或 R2，无法配对")
+        if lib.get("technology") == "illumina_wgs":
+            missing = _missing_pair_prefixes(lib)
+            if missing:
+                blockers.append(
+                    f"inputs.libraries[{lib.get('library_id')}]: 双端文库缺 R1 或 R2"
+                    f"（不成对样本前缀：{missing}），无法配对"
+                )
 
     # 4) 无效或损坏文件（模拟：existing_assembly 缺 hash → 提示补全，由校验层算；不硬阻断新手）
     ex = (project.get("inputs") or {}).get("existing_assembly")

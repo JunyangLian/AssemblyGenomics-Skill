@@ -74,6 +74,28 @@ def test_missing_r2_blocked() -> None:
     assert any("R1 或 R2" in b for b in r["blockers"])
 
 
+def test_cross_sample_r1_r2_not_paired() -> None:
+    """A_R1 + B_R2 各自缺端：按样本前缀判定，不算"R1/R2 都存在"（D-025）。"""
+    p = _base_project()
+    p["inputs"]["libraries"] = [
+        _lib("illumina_wgs", "wgs", reads=["/x/A_R1.fastq.gz", "/x/B_R2.fastq.gz"])
+    ]
+    r = route(p)
+    assert r["intent"] == "blocked"
+    assert any("R1 或 R2" in b for b in r["blockers"])
+    assert any("a" in b and "b" in b for b in r["blockers"])
+
+
+def test_untagged_single_end_does_not_trigger_pairing_block() -> None:
+    """无 R1/R2 标记的单端文件不触发双端配对阻断（单端是合法形态）。"""
+    p = _base_project()
+    p["inputs"]["libraries"] = [
+        _lib("illumina_wgs", "wgs", reads=["/x/sample.single.fq.gz"])
+    ]
+    r = route(p)
+    assert r["intent"] == "assemble_only"
+
+
 def test_unsupported_library_combo_blocked() -> None:
     assert ("illumina_wgs", "hic") not in SUPPORTED_COMBOS
     p = _base_project()

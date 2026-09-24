@@ -8,7 +8,7 @@
 
 ## 它能帮你做什么
 
-- **认数据**：随手丢一份文件清单，自动识别 WGS 短读 / Hi-C / RNA-seq / 已有组装，检查成对性，并推断交付目标（如从 hap1/hap2 文件名识别出"单倍型交付"）
+- **认数据**：随手丢一份文件清单，自动识别 WGS 短读 / Hi-C / RNA-seq / 已有组装；识别不了的 FASTQ 一律按 unknown 阻断待确认（不默认当 WGS），R1/R2 按样本前缀核对成对性（A_R1+B_R2 不算成对）；文件名线索（如 hap1/hap2）只提示候选交付目标，须显式确认后才路由
 - **定路线**：根据数据与目标推荐流程——从原始读段组装、已有组装接续 Hi-C 挂载，到结构注释与功能注释
 - **出 SOP**：生成可逐段执行的 SOP 包：每步含命令、资源预算、必须人工介入的检查点（如 Hi-C 的 Juicebox 校正）
 - **预警坑**：每一步挂载真实踩坑库——9 条真实事故种子（Dfam 旧库、TSEBRA 阈值、单外显子过滤的物种依赖……），带可执行检查脚本，专抓"能跑通但不完整"
@@ -24,8 +24,8 @@
 依赖：Python ≥3.9 + `jsonschema` + `PyYAML` + `pytest`。克隆仓库即可运行：
 
 ```bash
-# 识别数据 → 路由 → 生成带坑位预警的分步 SOP（示例文件名）
-python scripts/skill_coach.py SM_WGS_1.fq.gz SM_WGS_2.fq.gz SM_hic_all_1.fq.gz SM_hic_all_2.fq.gz
+# 识别数据 → 路由 → 生成带坑位预警的分步 SOP（示例文件名；交付表示必须显式声明）
+python scripts/skill_coach.py SM_WGS_1.fq.gz SM_WGS_2.fq.gz SM_hic_all_1.fq.gz SM_hic_all_2.fq.gz --repr primary_reference
 
 # 静默缺口体检（9 条真实陷阱探测器）
 python scripts/run_pitfall_checks.py
@@ -33,7 +33,7 @@ python scripts/run_pitfall_checks.py
 # 结果基线对照："这个数正常吗？"
 python scripts/check_baselines.py --taxon actinopterygii protein_coding_gene_count=23864
 
-# 全量回归（117 tests）
+# 全量回归（128 tests）
 python -m pytest -q
 ```
 
@@ -68,7 +68,7 @@ knowledge/pitfalls/         # 9 条真实陷阱（含检查脚本）
 knowledge/baselines/        # 类群兜底带（项目锚点优先）
 sop/yeast_loop/             # 毕业包：四段 SOP + 冻结 settings + 检查点（酵母实证）
 docs/                       # 决策记录、能力矩阵、用例实录、run_registry
-tests/                      # 117 tests
+tests/                      # 128 tests
 ```
 
 ## 路线图

@@ -16,7 +16,9 @@ sample:
   mixed_sample: false
 
 delivery:
-  representation: primary_reference
+  # 交付表示必须显式声明（primary_reference / phase_separated / …）；
+  # unresolved=未声明，校验与路由层阻断澄清，不默认（D-025）
+  representation: unresolved
   phase_scope_required: false
   parental_identity_required: false
   organelle_policy: review_and_separate

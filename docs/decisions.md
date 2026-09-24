@@ -130,3 +130,8 @@
 - 决策：公开仓库全量审计后修复 12 项问题。事实矛盾 3 项：陷阱库 README 判定语义与 `_decide_gap` 实现相反（改为关键词宣告约定）、use-case-003 状态头/待办停在 intake 期、capability_matrix 头部停在 M1；敏感信息：项目编号脱敏为 Grape-001、实机绝对路径占位化（/home、/mnt、/program、本地盘符）、删除含真实 conda 路径的 run_stage3.py.bak（.gitignore 补 *.bak）；发布口径：README 安装改"clone 后自行打包"（无 Release、dist 不入库）、快速开始 check_baselines 命令实测修复、License 链接修正；validation_report 补酵母环验证节；backend B 悬空引用如实标注"文档未落盘"；SOP 包生成行按 D-023 理由升 case_validated（酵母环四段实证）。
 - 理由：本项目核心即捕获"能跑通但不完整"——审计发现文档层存在同类静默缺口（状态头/验收报告停在旧版本、README 脱敏声明与公开内容不符），与运行层 silent gap 同源。
 - 影响：新纪律——**每落一条 D-决策须同步刷新受影响文档的状态头与计数**（文档层无 run_registry，靠此防漂移）；git 历史中旧内容保留（敏感度低，不重写历史；如需彻底清除另行评估 force-push）；回归 117 passed，快速开始命令全部实测通过。
+
+### D-025 数据识别层 P0 修复：unknown 不降级、BAM 非组装源、样本前缀配对、表示不默认
+- 决策：外部深度评审指出 intake 层 5 项结构性缺陷，全部修复：(1) BAM 从 assembly 类移除（与 scope-and-routing"BAM 不视作组装源"一致），归 bam 类仅提示人工明确用途；(2) 无 WGS/Hi-C/RNA 证据的 FASTQ 归 unknown_reads 并阻断——不默认当 WGS，新增 `--assume-wgs` 显式确认通道（technology_source 记 user_confirmed）；(3) 删除 hiseq 误判关键词（HiSeq 是平台名不是 Hi-C），全部关键词改分隔符边界匹配；(4) `read_files` 全量带入 library——此前"识别层知道缺 R2 只出 warning、路由层看不到原始文件"的层间信息丢失被消除，R1/R2 改按**样本前缀**成对硬阻断（A_R1+B_R2 不算成对；无标记单端不触发）；(5) `delivery.representation` 缺省即阻断（run_coach/CLI/模板默认由 primary_reference 改为 unresolved），hap1/hap2 文件名 hint 只提示候选、不自动采纳，与显式选择冲突时警告人工核实。
+- 理由：数据识别是全链路第一环，认错数据则后续路由/坑位/SOP 全部失效；"不得默认/不瞎猜"此前是文档原则而非代码事实，被自身默认值破坏。单案例（酵母）验证无法暴露这些只在第二、第三个项目上炸掉的问题。
+- 影响：SKILL.md 硬约束 4 扩充（unknown_reads/BAM/样本前缀配对）；README 认数据口径与快速开始命令同步（--repr 必填）；capability_matrix/validation_report 状态头刷新；回归 117→**128 passed**（新增 unknown 阻断/确认、BAM、hiseq、跨样本配对、单端不误伤、表示缺省、hint 不采纳等用例）。后续 P1（route-driven tool registry、结构化 pitfall detector、multi-species validation set）另行推进。

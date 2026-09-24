@@ -2,7 +2,7 @@
 
 记录每条能力路线的验证等级。等级定义：planned（仅设计）/ implemented_unverified（已实现未验证）/ smoke_tested（小样本验证链路）/ case_validated（真实案例验证）/ unsupported（不支持）。
 
-当前状态（2026-09-24，D-023）：全量回归 **117 passed**。注释全流程（重复 → RNA → 结构 → 功能）经 skill 生成的 SOP 在酵母机制环（use-case-003）**端到端跑通并逐段回传校验**，毕业包沉淀于 `sop/yeast_loop/`；Siganus 注释（use-case-002）为人工跑通的参考实现。**从原始读段组装仍未验证**（组装路线保持 planned；酵母环输入为已发表组装）。人工跑通与 skill 闭环分档记录，不混写。
+当前状态（2026-09-24，D-025）：全量回归 **128 passed**。数据识别层 P0 修复（D-025）：BAM 不再视作组装源、无法识别的 FASTQ 归 unknown_reads 并阻断待显式确认（不默认 WGS）、删除 hiseq 误判关键词、R1/R2 按样本前缀硬阻断、交付表示缺省即阻断（模板默认 unresolved）。注释全流程（重复 → RNA → 结构 → 功能）经 skill 生成的 SOP 在酵母机制环（use-case-003）**端到端跑通并逐段回传校验**，毕业包沉淀于 `sop/yeast_loop/`；Siganus 注释（use-case-002）为人工跑通的参考实现。**从原始读段组装仍未验证**（组装路线保持 planned；酵母环输入为已发表组装）。人工跑通与 skill 闭环分档记录，不混写。
 
 | 路线 | 输入 | 验证等级 | 说明 |
 |---|---|---|---|
