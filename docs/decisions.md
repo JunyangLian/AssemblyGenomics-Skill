@@ -135,3 +135,10 @@
 - 决策：外部深度评审指出 intake 层 5 项结构性缺陷，全部修复：(1) BAM 从 assembly 类移除（与 scope-and-routing"BAM 不视作组装源"一致），归 bam 类仅提示人工明确用途；(2) 无 WGS/Hi-C/RNA 证据的 FASTQ 归 unknown_reads 并阻断——不默认当 WGS，新增 `--assume-wgs` 显式确认通道（technology_source 记 user_confirmed）；(3) 删除 hiseq 误判关键词（HiSeq 是平台名不是 Hi-C），全部关键词改分隔符边界匹配；(4) `read_files` 全量带入 library——此前"识别层知道缺 R2 只出 warning、路由层看不到原始文件"的层间信息丢失被消除，R1/R2 改按**样本前缀**成对硬阻断（A_R1+B_R2 不算成对；无标记单端不触发）；(5) `delivery.representation` 缺省即阻断（run_coach/CLI/模板默认由 primary_reference 改为 unresolved），hap1/hap2 文件名 hint 只提示候选、不自动采纳，与显式选择冲突时警告人工核实。
 - 理由：数据识别是全链路第一环，认错数据则后续路由/坑位/SOP 全部失效；"不得默认/不瞎猜"此前是文档原则而非代码事实，被自身默认值破坏。单案例（酵母）验证无法暴露这些只在第二、第三个项目上炸掉的问题。
 - 影响：SKILL.md 硬约束 4 扩充（unknown_reads/BAM/样本前缀配对）；README 认数据口径与快速开始命令同步（--repr 必填）；capability_matrix/validation_report 状态头刷新；回归 117→**128 passed**（新增 unknown 阻断/确认、BAM、hiseq、跨样本配对、单端不误伤、表示缺省、hint 不采纳等用例）。后续 P1（route-driven tool registry、结构化 pitfall detector、multi-species validation set）另行推进。
+
+## 2026-09-24（晚）
+
+### D-024 重新定位：从"新手 SOP 生成器"到"生信流程可靠性决策系统"
+- 决策：项目核心叙事改为——生信流程最大的风险不是跑不起来，而是**跑完了但结果错/漏且用户不知情**（exit 0 静默失败：数据库版本不合适、参数被默认值吞掉、证据未真正进入下游、注释覆盖塌缩）。AssemblyGenomics = 把真实失败模式、领域判断与 QC 标准结构化的**可靠性决策系统**：按输入数据决定流程、逐阶段检查结果、判定**继续/警告/回退修复**。长期指向 Scientific Agent 的可靠性问题，而不仅是自动化。
+- 理由：项目全部真实捕获（PIT-001~009、酵母环 3.1% 拦截、GO=0、ET 降级）都是静默缺口类，无一例外；TSEBRA 事故咬的是熟手——静默缺口不挑人群。"新手 SOP 生成"只是这些机制的载体之一。用户明确重定位。
+- 影响：README/SKILL.md/AGENTS/commands 定位文本已改写（新手=决策系统的服务对象之一/护栏更厚，熟手=第二双眼睛；毕业包降为决策系统跑通后的自然沉淀物，D-020 的受众锁定由本条取代）；**下一构建目标：把"继续/警告/回退"判定策略从会话内经验固化为 stage-verdict 组件**（酵母决策日志 3.1% 拦截、221→5384 对照、ET 降级为种子数据）。

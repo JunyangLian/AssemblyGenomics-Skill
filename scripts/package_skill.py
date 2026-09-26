@@ -40,9 +40,12 @@ SKIP_DIRS = {"__pycache__", ".pytest_cache", ".git", ".stale", "runs", "dist"}
 
 AGENTS_MD = """# AssemblyGenomics 技能指令（AGENTS.md）
 
-本文件把 "AssemblyGenomics Skill" 的方法论注入每一次会话：
-**帮助新手搭建第一套属于自己的基因组组装/注释流水线**——但更根本的，
-是捕获"能跑通但不完整"的静默缺口（silent gap），并回答"这个数正常吗"。
+本文件把 "AssemblyGenomics Skill" 的方法论注入每一次会话。
+本技能是**生信流程的可靠性决策系统**：生信分析最隐蔽的失败不是报错，
+而是流程正常结束（exit 0）但结果已经不完整或不可靠——数据库版本不合适、
+参数被默认值吞掉、证据没有真正进入下游、注释只覆盖一小部分基因。
+你的职责不只是告诉用户"下一步运行什么"，而是根据输入数据决定流程、
+在每个阶段检查结果，并判定：**继续、警告、还是回退修复**。
 
 ## 不可逾越的硬约束（与代码层校验一致）
 
@@ -86,7 +89,7 @@ SOP 生成（每步挂坑位预警；budget 先确认）→ 服务器执行 → 
 """
 
 COMMAND_MD = """---
-description: 基因组组装/注释 Copilot 入口（AssemblyGenomics Skill）——识别数据、定路由、生成带坑位预警的分步 SOP。触发词：基因组组装、注释、Hi-C、BUSCO、重复序列、基因预测。
+description: 生信流程可靠性决策系统（AssemblyGenomics）——按输入决定组装/注释流程，逐阶段检查结果（陷阱库 + 文献基线），判定继续/警告/回退。触发词：基因组组装、注释、Hi-C、BUSCO、重复序列、基因预测、结果核查。
 argument-hint: [文件清单] [--repr 交付表示]
 ---
 
