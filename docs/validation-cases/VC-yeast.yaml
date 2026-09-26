@@ -1,0 +1,42 @@
+# VC-001~004：酵母环判定点（首批注册，2026-09-24）
+# 来源：use-case-003 §13/§14 实录；预期判定 = 事后由领域判断预标注（已发生过的事件）
+- id: VC-001
+  tier: stage
+  case: yeast_s288c_loop
+  stage: busco
+  input: "BUSCO C:3.1%（物种锚点预期 ~99%；13 秒完成 2137 组搜索 = 输入异常旁证）"
+  expected_verdict: gap
+  actual_verdict: gap
+  actual_action: "拦截 → 单因素对照（--filter_single_exon_genes 221 vs 5384）→ 修复 → BUSCO 99.0%"
+  status: passed
+  evidence: "use-case-003 §13；PIT-009"
+- id: VC-002
+  tier: stage
+  case: yeast_s288c_loop
+  stage: tsebra
+  input: "TSEBRA 合并输出 221 基因（augustus 5301 + genemark 5457 输入健康）"
+  expected_verdict: gap
+  actual_verdict: gap
+  actual_action: "单因素对照定位 --filter_single_exon_genes → 去过滤 → 5,384 基因"
+  status: passed
+  evidence: "use-case-003 §13；PIT-009"
+- id: VC-003
+  tier: e2e
+  case: yeast_s288c_loop
+  stage: braker
+  input: "ETP 蛋白环五连败（gmes_petap 预测阶段 scratch 内置 prothint 断裂）"
+  expected_verdict: fail_degrade
+  actual_verdict: fail
+  actual_action: "降级 ET 模式（去 --prot_seq）+ provenance 如实记录降级原因 + error_log"
+  status: passed
+  evidence: "error_log 2026-09-23；use-case-003 §13"
+- id: VC-004
+  tier: stage
+  case: yeast_s288c_loop
+  stage: functional
+  input: "InterProScan 正常（IPR 4,984）但 GO 蛋白数 = 0"
+  expected_verdict: gap
+  actual_verdict: gap
+  actual_action: "定位解析 bug（多值 GO 列 fullmatch 失败）→ findall 修复 → GO 4,517"
+  status: passed
+  evidence: "use-case-003 §14"
