@@ -1,0 +1,1 @@
+{"date":"2026-10-11","gold_freeze_sha256":"c5a08aca3f45f8cb26cfe5dbef739dae6b5e9a91c606e9e943b66e192e1db1d3","scope":"one 84-slot GLM run; 294 requests, 1500000 input proxy, 279552 output reservation; no retries or budget reset","source":"human user in current chat after bounded plan was stated","user_quote":"完成 GLM 运行前的预算保护和离线调用检查后，你直接运行即可，不需要我同意"}
