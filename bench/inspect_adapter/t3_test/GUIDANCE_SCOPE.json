@@ -1,0 +1,13 @@
+{
+  "version": "inspect-t3-guidance-scope-1",
+  "study": "new-source information-access comparison",
+  "conditions": ["inline", "tools"],
+  "skill_files_injected": [],
+  "skill_exposure_axis": "not_applicable",
+  "historical_h1_h3_applied": false,
+  "shared_guidance": ["system.txt", "final.txt", "schemas/model_output.schema.json", "per-case task.md consumer contract"],
+  "legacy_meta_policy": "Preserve the reproduced case_meta bytes with guidance_exposure=unassigned. That legacy Skill exposure field is not used as a stratum or a not_exposed claim in this separate Inspect study.",
+  "source_novelty": "Seven T3 accessions not used for earlier bench case construction; not a claim that pretraining or guidance lacks these mechanisms.",
+  "freeze_policy": "Freeze this scope together with all shared prompt, schema, case and implementation bytes before real evaluation calls.",
+  "case_meta_modified": false
+}

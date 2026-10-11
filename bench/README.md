@@ -6,7 +6,7 @@
 |---|---|---|
 | Inspect 官方流程与生信扩展 | [交付导航](inspect_adapter/DELIVERY.md) | 官方12样本真实小规模、四道开发题、19题T1/114观测真实工具回归、历史评分回放 |
 | 无密钥运行 | [复现说明](inspect_adapter/REPRODUCE.md) | 官方 mock、648条历史观测、协议 fixture、公开计算核验 |
-| T3新来源准备 | [14题草稿](inspect_adapter/t3_test/README.md) | 七来源同源题对、28条原生mock，答案未冻结、Linux复现待回传，无新API调用 |
+| T3新来源准备 | [14题草稿](inspect_adapter/t3_test/README.md) | 七来源同源题对、跨平台复现通过、AI审核完成，答案未冻结，无新评测API调用 |
 | 简历与面试 | [讲解提纲](inspect_adapter/INTERVIEW.md) | 框架贡献边界、代码阅读顺序、真实成功与失败案例 |
 | Bench v2 | [版本说明](v2/README.md)、[最终结果](v2/reports/v2-run-10_four-models_human-reviewed/results.json) | 24题；四模型 B/C 与 A 的648条归档观测，含失败与未覆盖 |
 | Bench v1 | [阶段4汇报](STAGE4_REPORT.md) | 16题、336个最终观测；版本独立冻结 |

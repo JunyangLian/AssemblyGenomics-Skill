@@ -1,5 +1,7 @@
 # T3准备阶段汇报
 
+本文件保留首轮准备阶段记录；2026-10-11后续Linux验收和AI审核状态见[验收与审核汇报](INTAKE_REVIEW_REPORT.md)。
+
 2026-10-11。用户“可以”批准继续准备；本阶段没有模型费用，没有改变旧冻结答案/提示/统计。
 
 1. **完成内容**：新增t3_packets.py、t3_task.py；14套cases（task、3个artifacts、meta、expected）、三份独立schema副本、私有真实SOURCE_SUBSETS、审核表、CASE_MANIFEST/VALIDATION、共用system/final、PLAN.draft、原生MOCK_RECEIPT、服务器reproduce_cases.py、小型reproduction_package.zip及Windows/PACKAGE回执。说明与导航同步更新在bench下。

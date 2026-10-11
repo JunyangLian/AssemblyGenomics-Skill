@@ -1,6 +1,6 @@
 # T3 七来源 Inspect 测试草稿
 
-2026-10-11。14题、7个同源题对，已构造和离线验证；答案未获批准、未冻结，没有真实模型结果。沿用已验收的 `bench/v3/SOURCE_RECEIPT.json`，只读取其中七套T3 GFF/FAA；没有重跑注释或引入其它本地物种。不是旧v3 28题计划的自动替代。
+2026-10-11。14题、7个同源题对，Windows/Linux复现均已验收，上下文隔离AI审核完成；答案未获用户批准、未冻结，没有真实评测模型结果。当前公共类别合同为draft-2，详见[验收与审核汇报](INTAKE_REVIEW_REPORT.md)。沿用已验收的 `bench/v3/SOURCE_RECEIPT.json`，只读取其中七套T3 GFF/FAA；没有重跑注释或引入其它本地物种。不是旧v3 28题计划的自动替代。
 
 | 来源 | 正常题 / 变体 | 唯一改变 | 原始特征行 / 蛋白条数 |
 |---|---|---|---|
@@ -12,7 +12,7 @@
 | Gallus gallus，GCF_016699485.2 | t3_011 / t3_012 | 一个CDS片段移到自身mRNA末端之外，片段长度不变 | 41 / 3 |
 | Zeus faber，GCF_960531495.2 | t3_013 / t3_014 | 同上 | 22 / 2 |
 
-拟定判定：每对正常题为pass；变体为block。protein_id不能接续为文件级id_mismatch；Parent缺失或父子区间不满足为文件级gff_hierarchy_error。这些只是候选答案，具体证据见各题expected.json及[审核表](REVIEW_SHEET.csv)。作者AI草拟，独立审核pending，没有真人专家盲审记录。
+拟定判定：每对正常题为pass；变体为block。protein_id不能接续为文件级id_mismatch；Parent缺失或父子区间不满足为文件级gff_hierarchy_error。这些只是候选答案，具体证据见各题expected.json及[审核表](REVIEW_SHEET.csv)。作者AI草拟，另一个fork_none子agent匿名公开资料审核14/14决定一致，未改候选答案；不是跨模型独立性、真人专家验证或评测模型正确率。原稿和不确定性保存在[reviews](reviews/COMPARISON.json)。
 
 ## 输入合同与来源
 
@@ -32,14 +32,17 @@ tools最多5次收集生成（每次512输出token），随后关闭工具并单
 
 主分析单位拟为题：每题3次中至少2次完整匹配某个可接受的verdict/observed_defect/root_cause组合，才算决定共同成功；逐字段正确率和观测层结果另报。解析错误或缺失槽位留在分母中；配对成功需两题都达到题级共同成功。另按7个来源组报告，重复与同源题对不视为独立来源。
 
-严格schema及引用位置存在仅证明格式/定位；自动决定评分不证明证据语义和action安全。这两项需单独人工或明确标注的AI编码复核；自报booleans不作安全保证。新来源不等于模型预训练未见，连接机制也可能在旧指导中相关出现。meta的guidance_exposure目前unassigned，冻结前解决；不用于旧H1–H3检验或声称Skill提升。T1与本版合同、schema、来源不同，分开报告。
+严格schema及引用位置存在仅证明格式/定位；自动决定评分不证明证据语义和action安全。这两项需单独人工或明确标注的AI编码复核；自报booleans不作安全保证。新来源不等于模型预训练未见，连接机制也可能在旧指导中相关出现。[GUIDANCE_SCOPE.json](GUIDANCE_SCOPE.json)明确此研究没有Skill条件，旧Skill暴露轴不适用；保留已复现meta中的unassigned字节，不将它当作not_exposed分层。不用于旧H1–H3检验或声称Skill提升。T1与本版合同、schema、来源不同，分开报告。
+
+AI审核指出Parent标识错误可被宽泛理解为id_mismatch。公共system的draft-2在正式评测前统一约定：id_mismatch用于跨文件连接键；gff_hierarchy_error用于GFF内部引用/层级。该定义对两条件、所有题相同，不包含某题答案或注入记录。评审看到的是旧draft-1，独立原稿不重写；14道题的task/artifacts/meta/expected字节不变，不需要重新构题或服务器复现。
 
 ## 已做的离线验证
 
 - [VALIDATION.json](VALIDATION.json)：14题schema、来源绑定、引用位置、连接参考事实、泄漏扫描和成对表面一致性通过。
 - [MOCK_RECEIPT.json](MOCK_RECEIPT.json)：28条原生模拟观测、98次模拟生成、350条实际Python工具回复，28条最终JSON合法，零供应商调用；脚本回答不读取target，不计作质量成绩。另有3次模拟生成的旧16消息上限负对照，复现最终提交未到达。
 - [WINDOWS_REPRODUCTION.json](WINDOWS_REPRODUCTION.json)：实际展开分发包重新生成，14题、84个题目文件哈希一致；重复打包逐字节一致。
-- Linux复现尚待用户执行回传，不能写成已通过。没有FROZEN或真实API入口。
+- [LINUX_REPRODUCTION.json](LINUX_REPRODUCTION.json)：用户回传Linux/Python 3.9.23包，本地核对85个运输payload与84个题目文件，全部一致；构建器/子集/参考manifest版本也一致。未再次扫描原始大文件。服务器没有记录精确jsonschema版本，保留此记录缺口。
+- 上下文隔离AI审核14题，7 pass、7 block，与作者候选14/14一致；匿名复制及访问约束不是操作系统强制隔离，精确评审模型ID不可用，不声称跨模型独立性。未冻结答案，没有真实API入口。
 
 本地命令（无需密钥）：
 
@@ -64,4 +67,6 @@ python t3_reproduction/reproduce_cases.py
 
 此复现证明同一运输子集在两端生成相同字节，不是再次验证完整原GFF/FAA提取。当前包含私有候选答案构造逻辑，专用于复现/审核，不能交给被评测模型。
 
-待Linux回执验收及答案审核后，再登记guidance分组、冻结答案/提示/实现并单独批准真实预算。[PLAN.draft.json](PLAN.draft.json)仅拟定14题×2条件×3次=84槽位，最多294请求、输入代理150万、输出申请279,552；不是已批准调用。初始正文输入代理均值约4,855，工具索引约1,622，累计工具声明和回复另计。费用待价格复核；不继承T1剩余额度。
+Linux已验收；现在等待用户确认候选答案。之后冻结答案/提示/实现，真实预算单独批准。[PLAN.draft.json](PLAN.draft.json)仅拟定14题×2条件×3次=84槽位，最多294请求、输入代理150万、输出申请279,552；不是已批准调用。初始正文与工具索引代理量分别记录在计划的initial_input_summary，工具声明和累计回复另计。
+
+[官方价格](https://siliconflow.cn/pricing)与[分时说明](https://docs.siliconflow.cn/docs/release-notes/overview)于2026-10-11复核：此Flash高峰无缓存输入¥3/百万token、输出¥9/百万token。按代理输入预算与输出申请上限计算参考约¥7.02；这是估算，不是tokenizer精确成本、金额硬上限或账单。价格快照见[PRICE_SNAPSHOT.draft.json](PRICE_SNAPSHOT.draft.json)。不继承T1额度，不做自动换型号；没有真实请求验证供应商当前返回的模型身份。

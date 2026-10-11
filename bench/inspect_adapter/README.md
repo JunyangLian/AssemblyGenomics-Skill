@@ -46,7 +46,9 @@ Linux 对应使用 `.venv/bin/python`。本轮已实际验证 Windows Python 3.1
 
 2026-10-11补充：[19题T1真实回归](t1_regression/live1/REPORT.md)已完成114条观测，既有题库通过Inspect原生正文/工具两条件执行；[失败解释](t1_regression/live1/ERROR_NOTES.md)区分旧标签匹配、处置分歧及三条消息上限终止。未混入历史B/C或H1–H3。
 
-随后准备[T3七来源14题草稿](t3_test/README.md)：真实完整特征块和蛋白、确定性连接/Parent/区间变体，28条原生mock和Windows分发包复现通过；取消旧16消息上限并用生成轮数控制。答案仍pending，Linux复现和真实预算尚待完成，没有T3模型质量结果。
+随后准备[T3七来源14题草稿](t3_test/README.md)：真实完整特征块和蛋白、确定性连接/Parent/区间变体，28条原生mock和跨平台复现通过；取消旧16消息上限并用生成轮数控制。答案仍待用户确认，新真实预算尚未批准，没有T3模型质量结果。
+
+后续[Linux验收与匿名AI审核](t3_test/INTAKE_REVIEW_REPORT.md)已完成：14题84文件跨平台一致，AI决定与候选14/14一致。运行前公共合同draft-2明确跨文件ID与GFF内部层级类别，原题/答案字节及独立稿不改；用户答案确认、冻结与真实调用批准仍未完成。
 
 ## 目前完成到哪里
 

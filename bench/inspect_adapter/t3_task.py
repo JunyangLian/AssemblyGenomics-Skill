@@ -13,6 +13,7 @@ from bench.harness_common import strict_object, token_estimate
 DIRECTORY=packets.DIRECTORY
 CONDITIONS=('inline','tools')
 CASE_IDS=tuple(f't3_{i:03d}' for i in range(1,15))
+VERSION='inspect-t3-draft-2-root-label-contract'
 
 
 def checked_cases():
@@ -75,7 +76,25 @@ def prepare_plan():
                         for cid in CASE_IDS} for condition in CONDITIONS}
     summary={condition:{'sum_per_repeat':sum(values.values()),'mean_per_initial_request':sum(values.values())/14,
                          'minimum':min(values.values()),'maximum':max(values.values())} for condition,values in initial.items()}
-    plan={'version':'inspect-t3-draft-1','status':'draft','answers_frozen':False,'api_call_authorized':False,
+    unresolved=['user answer review']
+    attachments={}
+    linux=DIRECTORY/'LINUX_REPRODUCTION.json'
+    if linux.exists():
+        result=packets.read_json(linux)
+        if result.get('status')!='verified_linux_windows_parity' or result.get('local_reference_sha256')!=packets.digest((DIRECTORY/'CASE_MANIFEST.json').read_bytes()):
+            raise ValueError('Linux receipt does not match current reference')
+        attachments['linux_reproduction']='LINUX_REPRODUCTION.json'
+    else:
+        unresolved.append('Linux reproduction receipt')
+    scope=DIRECTORY/'GUIDANCE_SCOPE.json'
+    if scope.exists():
+        data=packets.read_json(scope)
+        if data.get('skill_exposure_axis')!='not_applicable' or data.get('skill_files_injected')!=[]:
+            raise ValueError('unexpected Skill guidance scope')
+        attachments['guidance_scope']='GUIDANCE_SCOPE.json'
+    else:
+        unresolved.append('guidance metadata assignment')
+    plan={'version':VERSION,'status':'draft','answers_frozen':False,'api_call_authorized':False,
         'case_ids':list(CASE_IDS),'source_groups':7,'conditions':list(CONDITIONS),'repetitions_proposed':3,
         'planned_observations':84,'model_proposed':'deepseek-ai/DeepSeek-V4-Flash',
         'provider_proposed':'SiliconFlow','temperature_proposed':0,'enable_thinking_proposed':False,
@@ -92,10 +111,19 @@ def prepare_plan():
             'source_group_report':True,'evidence_semantics':'manual/AI-coded review separately, not inferred from pointer existence',
             'action_safety':'separate review; booleans are model self-report',
             'claim':'exploratory new-source information-access test; not H1-H3 or Skill-effect comparison'},
-        'unresolved_pre_freeze':['user answer review','Linux reproduction receipt','guidance metadata assignment'],
+        'unresolved_pre_freeze':unresolved,'attachments':attachments,
         'protected_draft_hashes':{p.relative_to(packets.ROOT).as_posix():packets.digest(p.read_bytes()) for p in
             (Path(__file__),packets.ROOT/'t3_packets.py',packets.ROOT/'readonly.py',DIRECTORY/'system.txt',
              DIRECTORY/'final.txt',DIRECTORY/'schemas/model_output.schema.json',DIRECTORY/'CASE_MANIFEST.json')}}
+    for name in attachments.values():
+        plan['protected_draft_hashes']['t3_test/'+name]=packets.digest((DIRECTORY/name).read_bytes())
+    price=DIRECTORY/'PRICE_SNAPSHOT.draft.json'
+    if price.exists():
+        quote=packets.read_json(price)
+        plan['reference_cost_cny']=quote['peak_uncached_reference_cost']
+        plan['price_snapshot']='PRICE_SNAPSHOT.draft.json'
+        plan['cost_note']='2026-10-11官方价格按高峰无缓存与代理预算估算约¥7.02，不是硬性金额上限或账单；真实调用未批准。'
+        plan['protected_draft_hashes']['t3_test/PRICE_SNAPSHOT.draft.json']=packets.digest(price.read_bytes())
     packets.write_json(DIRECTORY/'PLAN.draft.json',plan)
     print('PREPARED: 84 proposed observations, no freeze or API authorization')
     return plan
@@ -154,7 +182,7 @@ def make_task(condition,repetitions=3,case_ids=CASE_IDS):
                 explanation='Invalid output: '+type(error).__name__+': '+str(error)
             return Score(value=labels,answer=json.dumps(value,ensure_ascii=False),explanation=explanation)
         return score
-    return Task(name='t3_draft_'+condition,version='inspect-t3-draft-1',dataset=samples,
+    return Task(name='t3_draft_'+condition,version=VERSION,dataset=samples,
         solver=collect_submit(),scorer=draft_labels(),epochs=1,message_limit=None,turn_limit=6,
         time_limit=480,score_on_error=True,continue_on_fail=True,
         metadata={'answer_status':'draft','live_authorized':False,'max_collect_rounds':5,
