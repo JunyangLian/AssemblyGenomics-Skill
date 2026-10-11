@@ -1,5 +1,7 @@
 # T3 GLM 原生 Inspect 运行
 
+当前状态：首轮因强制思考与关闭思考合同不相容而停止，0份合法QC决定，不能做质量比较。见[兼容诊断](COMPATIBILITY_FAILURE.md)、[保留全分母的报告](REPORT.md)及[阶段汇报](PHASE_REPORT.md)。旧实现/授权保持冻结，不自动重新启动。
+
 2026-10-11 用户授权：“完成 GLM 运行前的预算保护和离线调用检查后，你直接运行即可，不需要我同意”。[APPROVAL.json](APPROVAL.json)及[FROZEN.json](FROZEN.json)封存本轮授权、实现和计划，金标准仍为上级目录已确认的14题。
 
 配置：SiliconFlow `zai-org/GLM-5.3-Flash`，本地环境变量 `SILICONFLOW_API_KEY`，14题×inline/tools×三次=84槽位，串行调用。请求前累计预留：最多294请求、150万输入代理token、279,552输出申请token；单请求≤80,000字节。输入代理不是供应商tokenizer或金额硬上限，按价格快照参考约¥1.98，实际以平台账单为准。
