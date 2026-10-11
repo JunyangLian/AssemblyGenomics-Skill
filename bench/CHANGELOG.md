@@ -1,5 +1,12 @@
 # bench 变更记录
 
+## T3 用户确认冻结与后续 GLM 选型 — 2026-10-11
+
+- 用户明确确认14份候选答案及draft-2公共合同，新增APPROVAL.json和FROZEN.md/json，逐题登记expected SHA-256并保护84题目文件、提示/schema、Linux与AI原稿凭据；未改变任何复现字节，历史draft字段由当前授权侧录解释。
+- 新增冻结验证，拒绝答案/提示篡改、遗漏冻结项或额外题目文件；付费授权仍false，模型配置与gold封存分离。
+- 用户指定后续GLM-5.3-Flash。按官方目录确认完整ID zai-org/GLM-5.3-Flash，沿用SiliconFlow地址和环境变量密钥；新计划另存，不覆盖历史DeepSeek草案或已冻结标准答案。真实预算和参数兼容尚未批准/验证，无API调用。
+- 完整pytest471 passed、9个第三方弃用警告，264.32秒；冻结专项4/4通过。84个题目文件与复现manifest零差异，阶段汇报见inspect_adapter/t3_test/FREEZE_REPORT.md。
+
 ## T3 Linux验收、匿名AI审核与类别定义 — 2026-10-11
 
 - 用户回传v4/incoming/inspect_t3_cases_reproduction，本地验收85运输payload与14题84文件逐字节一致，版本绑定全部一致；源大文件不重扫。服务器Python3.9.23，jsonschema精确版本未记录。

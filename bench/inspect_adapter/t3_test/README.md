@@ -1,4 +1,16 @@
-# T3 七来源 Inspect 测试草稿
+# T3 七来源 Inspect 测试
+
+## 当前状态：答案已冻结
+
+2026-10-11 用户确认14份答案并允许冻结；[FROZEN.md](FROZEN.md)逐题登记expected SHA-256，[FROZEN.json](FROZEN.json)封存84个题目文件、公共提示/schema及验收依据。题目内draft/pending和历史凭据中的false是生成时状态，保留复现字节；当前授权以[APPROVAL.json](APPROVAL.json)为准。此授权不包含付费调用。
+
+用户随后指定改用 GLM-5.3-Flash，完整API ID为 `zai-org/GLM-5.3-Flash`，base_url沿用 `https://api.siliconflow.cn/v1`，密钥只读 `SILICONFLOW_API_KEY`。后续计划见[NEXT_RUN.draft.json](NEXT_RUN.draft.json)；下文及PLAN.draft/价格快照是之前DeepSeek准备阶段的历史记录，不作为当前运行配置。新运行还需物理预算保护与模型参数兼容验证，未发送真实请求。
+
+新草案保持14题×两条件×三次=84条观测，最多294请求、150万输入代理token、279,552输出申请token。[官方价格](https://siliconflow.cn/pricing)列出该GLM无缓存输入¥0.80/百万、输出¥2.80/百万；按上述代理/申请额度参考约¥1.98，非实际账单或金额硬上限。[新价格快照](PRICE_GLM.draft.json)与历史DeepSeek快照分别保存。思考开关、JSON格式及工具调用参数尚未经过供应商真实请求验证，不从其它模型的成功结果推断兼容。
+
+冻结后不要执行build或prepare覆盖文件；可运行 `bench/inspect_adapter/.venv/Scripts/python.exe -m bench.inspect_adapter.t3_freeze --verify`。若修改答案或公开合同，须新建版本而非覆盖本冻结。
+
+以下为冻结前准备记录。
 
 2026-10-11。14题、7个同源题对，Windows/Linux复现均已验收，上下文隔离AI审核完成；答案未获用户批准、未冻结，没有真实评测模型结果。当前公共类别合同为draft-2，详见[验收与审核汇报](INTAKE_REVIEW_REPORT.md)。沿用已验收的 `bench/v3/SOURCE_RECEIPT.json`，只读取其中七套T3 GFF/FAA；没有重跑注释或引入其它本地物种。不是旧v3 28题计划的自动替代。
 
